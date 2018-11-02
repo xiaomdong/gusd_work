@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+package server;
+
+// The greeting service definition.
+service gemini {
+  // Sends a deposit
+  rpc login (loginRequest) returns (loginReply) {}
+  rpc register (registerRequest) returns (registerReply) {}
+  rpc balance (balanceRequest) returns (balanceReply) {}
+  rpc info (infoRequest) returns (infoReply) {}
+  rpc exchangeGUSD(exchangeGUSDRequest) returns (exchangeGUSDReply) {}
+  rpc exchangeUSD(exchangeUSDRequest) returns (exchangeUSDReply) {}
+  rpc withdrawalUSD(withdrawalUSDRequest) returns (withdrawalUSDReply) {}
+  rpc withdrawalGUSD(withdrawalGUSDRequest) returns (withdrawalGUSDReply) {}
+  rpc record(recordRequest) returns (stream recordReply) {}
+}
+
+// The request message containing the user's name.
+message loginRequest {
+  string account  = 1;
+  string password = 2;
+}
+
+// The response message containing the greetings
+message loginReply {
+  string message = 1;
+}
+
+// The request message containing the user's name.
+message registerRequest {
+  string account  = 1;
+  string password = 2;
+  string mail     = 3;
+  string phone    = 4;
+  string withdrawBankAccount = 5;
+  string withdrawEthaddress  = 6;
+}
+
+// The response message containing the greetings
+message registerReply {
+  string message = 1;
+}
+
+// The request message containing the user's name.
+message balanceRequest {
+  string account = 1;
+}
+
+// The response message containing the greetings
+message balanceReply {
+  string message = 1;
+  uint32 usd     = 2;
+  uint32 gusd    = 3;
+}
+
+// The request message containing the user's name.
+message infoRequest {
+  string account = 1;
+}
+
+// The response message containing the greetings
+message infoReply {
+  string message    = 1;
+  string account    = 2;
+  string mail       = 3;
+  string phone      = 4;
+  uint32 usd        = 5;
+  uint32 gusd       = 6;
+  string depositEthaddress  = 7;
+  string depositBankAccount = 8;
+}
+
+
+// The request message containing the user's name.
+message exchangeGUSDRequest {
+  string account = 1;
+  uint32 usd     = 2 ;
+}
+
+// The response message containing the greetings
+message exchangeGUSDReply {
+  string message = 1;
+  uint32 usd     = 2;
+  uint32 gusd    = 3;
+}
+
+
+// The request message containing the user's name.
+message exchangeUSDRequest {
+  string account = 1;
+  uint32 gusd    = 2;
+}
+
+// The response message containing the greetings
+message exchangeUSDReply {
+  string message = 1;
+  uint32 usd     = 2;
+  uint32 gusd    = 3;
+}
+
+
+// The request message containing the user's name.
+message withdrawalUSDRequest {
+  string account  = 1;
+  string withdrawBankAccount = 2;
+  uint32 usd = 3;
+}
+
+// The response message containing the greetings
+message withdrawalUSDReply {
+  string message = 1;
+  uint32 usd     = 2;
+  uint32 gusd    = 3;
+}
+
+
+// The request message containing the user's name.
+message withdrawalGUSDRequest {
+  string account    = 1;
+  string withdrawEthaddress = 2;
+  uint32 gusd       = 3;
+}
+
+// The response message containing the greetings
+message withdrawalGUSDReply {
+  string message = 1;
+  uint32 usd     = 2;
+  uint32 gusd    = 3;
+}
+
+
+// The request message containing the user's name.
+message recordRequest {
+  string account    = 1;
+}
+
+// The response message containing the greetings
+message recordReply {
+  string message      = 1;
+  string account      = 2;
+  string time         = 3;
+  uint32 operation    = 4;
+  string otherAccount = 5;
+  uint32 value        = 6;
+}

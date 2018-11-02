@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package bank;
+
+
+// The greeting service definition.
+service bank {
+  // Sends a deposit
+  rpc deposit (depositRequest) returns (depositReply) {}
+  rpc withdrawal (withdrawalRequest) returns (withdrawalReply) {}
+  rpc balance (balanceRequest) returns (balanceReply) {}
+  rpc transfer(transferRequest) returns (transferReply) {}
+  rpc getRecord(getRecordRequest) returns (stream getRecordReply) {}
+}
+
+// The request message containing the user's name.
+message depositRequest {
+  string account = 1;
+  uint32 value   = 2;
+}
+
+// The response message containing the greetings
+message depositReply {
+  string message = 1;
+  uint32 balance = 2;
+}
+
+
+// The request message containing the user's name.
+message withdrawalRequest {
+  string account = 1;
+  uint32 value   =2;
+}
+
+// The response message containing the greetings
+message withdrawalReply {
+  string message = 1;
+  uint32 balance = 2;
+}
+
+// The request message containing the user's name.
+message balanceRequest {
+  string account = 1;
+}
+
+// The response message containing the greetings
+message balanceReply {
+  string message = 1;
+  uint32 balance = 2;
+}
+
+
+// The request message containing the user's name.
+message transferRequest {
+  string fromAccount = 1;
+  string toAccount   = 2;
+  uint32 value       = 3 ;
+}
+
+// The response message containing the greetings
+message transferReply {
+  string message = 1;
+  uint32 balance = 2;
+}
+
+
+// The request message containing the user's name.
+message getRecordRequest {
+  string account = 1;
+}
+
+// The response message containing the greetings
+message getRecordReply {
+  string account      = 1;
+  string time         = 2;
+  uint32 operation    = 3;
+  string otherAccount = 4;
+  uint32 value        = 5;
+}
