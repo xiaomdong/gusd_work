@@ -14,6 +14,7 @@ service gemini {
   rpc withdrawalUSD(withdrawalUSDRequest) returns (withdrawalUSDReply) {}
   rpc withdrawalGUSD(withdrawalGUSDRequest) returns (withdrawalGUSDReply) {}
   rpc record(recordRequest) returns (stream recordReply) {}
+  rpc bankInfo(bankInfoRequest) returns (bankInfoReply) {}
 }
 
 // The request message containing the user's name.
@@ -143,4 +144,18 @@ message recordReply {
   uint32 operation    = 4;
   string otherAccount = 5;
   uint32 value        = 6;
+}
+
+// The request message containing the user's name.
+message bankInfoRequest {
+  string account      = 1;
+  string time         = 2;
+  uint32 operation    = 3;
+  string otherAccount = 4;
+  uint32 value        = 5;
+}
+
+// The response message containing the greetings
+message bankInfoReply {
+  string message      = 1;
 }

@@ -6,7 +6,7 @@ from bank_sql import *
 class testBank(unittest.TestCase):
 
     def setUp(self):
-        self.bank = Bank("test.db")
+        self.bank = bank("test.db")
         self.bank.run()
 
     def tearDown(self):

@@ -10,10 +10,10 @@ import bank_sql
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 
-class bank(bank_pb2_grpc.bankServicer):
+class bank_server(bank_pb2_grpc.bankServicer):
     def __init__(self):
-        super(bank, self).__init__()
-        self.bankSql=bank_sql.Bank()
+        super(bank_server, self).__init__()
+        self.bankSql=bank_sql.bank()
         self.bankSql.run()
         self.threadLock = threading.Lock()
 
@@ -71,7 +71,7 @@ class bank(bank_pb2_grpc.bankServicer):
 
 def run():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    bank_pb2_grpc.add_bankServicer_to_server(bank(), server)
+    bank_pb2_grpc.add_bankServicer_to_server(bank_server(), server)
     server.add_insecure_port('[::]:50052')
     server.start()
     try:

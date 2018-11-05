@@ -10,9 +10,9 @@ import gemini_sql
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 
-class gemini(gemini_pb2_grpc.geminiServicer):
+class gemini_server(gemini_pb2_grpc.geminiServicer):
     def __init__(self):
-        super(gemini, self).__init__()
+        super(gemini_server, self).__init__()
         # self.bankSql=bank_sql.Bank()
         # self.bankSql.run()
         self.threadLock = threading.Lock()
@@ -70,9 +70,15 @@ class gemini(gemini_pb2_grpc.geminiServicer):
         for i in feature_list:
             yield i
 
+    def bankInfo(self,request, context):
+        print(request)
+        self.threadLock.acquire()
+        self.threadLock.release()
+        return gemini_pb2.bankInfoReply(message='OK')
+
 def run():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    gemini_pb2_grpc.add_geminiServicer_to_server(gemini(), server)
+    gemini_pb2_grpc.add_geminiServicer_to_server(gemini_server(), server)
     server.add_insecure_port('[::]:50053')
     server.start()
     try:

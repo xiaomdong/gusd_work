@@ -59,6 +59,11 @@ class geminiStub(object):
         request_serializer=gemini__pb2.recordRequest.SerializeToString,
         response_deserializer=gemini__pb2.recordReply.FromString,
         )
+    self.bankInfo = channel.unary_unary(
+        '/server.gemini/bankInfo',
+        request_serializer=gemini__pb2.bankInfoRequest.SerializeToString,
+        response_deserializer=gemini__pb2.bankInfoReply.FromString,
+        )
 
 
 class geminiServicer(object):
@@ -128,6 +133,13 @@ class geminiServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def bankInfo(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_geminiServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -175,6 +187,11 @@ def add_geminiServicer_to_server(servicer, server):
           servicer.record,
           request_deserializer=gemini__pb2.recordRequest.FromString,
           response_serializer=gemini__pb2.recordReply.SerializeToString,
+      ),
+      'bankInfo': grpc.unary_unary_rpc_method_handler(
+          servicer.bankInfo,
+          request_deserializer=gemini__pb2.bankInfoRequest.FromString,
+          response_serializer=gemini__pb2.bankInfoReply.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

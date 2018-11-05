@@ -74,6 +74,7 @@ class bankSql():
             result = self.cursor.fetchall();
             return []     #表示执行正常
         except Exception as e:
+            self.conn.rollback()  # 回滚？
             print("something err:%s" % (e))
             return None   #表示执行异常
 
@@ -85,6 +86,7 @@ class bankSql():
                 return [] #[]表示表格中没有数据
             return result #表格中有数据
         except Exception as e:
+            self.conn.rollback()  # 回滚？
             print("something err:%s" % (e))
             return None   #表示执行异常
 
@@ -96,6 +98,7 @@ class bankSql():
                 return [] #[]表示表格中没有数据
             return result #表格中有数据
         except Exception as e:
+            self.conn.rollback()  # 回滚？
             print("something err:%s" % (e))
             return None   #表示执行异常
 
@@ -137,7 +140,7 @@ class bankSql():
         self.conn.close()
 
 # 没有考虑溢出的情况
-class Bank():
+class bank():
     def __init__(self, db_path=BANK_SQL_DB):
         self.sql = bankSql(db_path)
 
@@ -150,7 +153,7 @@ class Bank():
     def getBalance(self,account):
         result = self.sql.getBalance(account)
         if (result == []):
-            return None
+            return 0
         else:
             return result[0][1]
 
