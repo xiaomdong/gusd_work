@@ -7,7 +7,7 @@ import pprint
 
 from web3.providers.eth_tester import EthereumTesterProvider
 from web3 import Web3
-from solc import compile_source
+from solc import compile_source,compile_files
 from web3.middleware import geth_poa_middleware
 
 
@@ -41,11 +41,14 @@ def main(event_filter_):
         loop.close()
 
 # 编译sol合约代码
-def compile_source_file(file_path):
+def compile_source(file_path):
    with open(file_path, 'r') as f:
       source = f.read()
-
    return compile_source(source)
+
+
+def compile_file(file_path):
+    return compile_files([file_path])
 
 # 部署合约
 def deploy_contract(web3, contract_interface):
