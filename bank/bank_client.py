@@ -2,10 +2,16 @@ from __future__ import print_function
 import threading
 import grpc
 
+# from bank import bank_pb2
+# from bank import bank_pb2_grpc
 import bank_pb2
 import bank_pb2_grpc
 
-
+def bank_client(BANK_SERVER):
+    with grpc.insecure_channel(BANK_SERVER) as channel:
+        stub = bank_pb2_grpc.bankStub(channel)
+        return stub
+    return None
 
 
 def run1000_1():
@@ -138,7 +144,7 @@ def run():
 
 
 if __name__ == '__main__':
-    # run()
+    run()
     # 创建 10 个线程
     # thrs1 = [threading.Thread(target=run1000_1) for i in range(1)]
     # # 开始执行线程
@@ -170,4 +176,4 @@ if __name__ == '__main__':
     # # 等待线程结束
     # [thr.join() for thr in thrs4]
 
-    getRecord()
+    # getRecord()

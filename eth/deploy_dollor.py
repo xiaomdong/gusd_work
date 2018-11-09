@@ -1,12 +1,19 @@
 from eth_interface import *
 from web3.middleware import geth_poa_middleware
 
-CUSTODIAN_FILE_PATH    = './dollor/Custodian.sol'
-ERC20STORE_FILE_PATH   = './dollor/ERC20Store.sol'
-ERC20PROXY_FILE_PATH   = './dollor/ERC20Proxy.sol'
-ERC20IMPL_FILE_PATH    = './dollor/ERC20Impl.sol'
-PRINTLIMITER_FILE_PATH = './dollor/PrintLimiter.sol'
-DEPLOY_FILE_PATH       = './dollor/deploy.sol'
+# CUSTODIAN_FILE_PATH    = './dollor/Custodian.sol'
+# ERC20STORE_FILE_PATH   = './dollor/ERC20Store.sol'
+# ERC20PROXY_FILE_PATH   = './dollor/ERC20Proxy.sol'
+# ERC20IMPL_FILE_PATH    = './dollor/ERC20Impl.sol'
+# PRINTLIMITER_FILE_PATH = './dollor/PrintLimiter.sol'
+# DEPLOY_FILE_PATH       = './dollor/deploy.sol'
+
+CUSTODIAN_FILE_PATH    = '/home/test/PycharmProjects/gusd_work/eth/dollor/Custodian.sol'
+ERC20STORE_FILE_PATH   = '/home/test/PycharmProjects/gusd_work/eth/dollor/ERC20Store.sol'
+ERC20PROXY_FILE_PATH   = '/home/test/PycharmProjects/gusd_work/eth/dollor/ERC20Proxy.sol'
+ERC20IMPL_FILE_PATH    = '/home/test/PycharmProjects/gusd_work/eth/dollor/ERC20Impl.sol'
+PRINTLIMITER_FILE_PATH = '/home/test/PycharmProjects/gusd_work/eth/dollor/PrintLimiter.sol'
+DEPLOY_FILE_PATH       = '/home/test/PycharmProjects/gusd_work/eth/dollor/deploy.sol'
 
 # def deploy_gusd_contract(web3,path,constractName,*args):
 #     contract_source_path = path
@@ -32,6 +39,7 @@ def deploy_gusd_contract(web3,path,constractName,*args):
 def get_gusd_contract(web3,path,constractName,address_,*args):
     contract_source_path = path
     compiled_sol = compile_file(contract_source_path)
+    # print(compiled_sol.keys())
     contract_interface=compiled_sol[path+":"+constractName]
     # address_ = deploy_contract_with_args(web3, contract_interface,*args)
 
@@ -137,3 +145,5 @@ if __name__ == '__main__':
                                         '0x5Fd0B7Ab187773cCbAe3FA87a14B13745A602165',
                                         '0xe0526B779D6F326a28156809e24c894AE455CbBD',
                                         '0x4f4399DDe7687794B141254A34Dd862891ACa1B6').transact()
+
+

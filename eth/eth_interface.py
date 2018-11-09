@@ -25,6 +25,12 @@ async def log_loop(event_filter, poll_interval):
             handle_event(event)
         await asyncio.sleep(poll_interval)
 
+def  event_loop(event_filter, poll_interval):
+    while True:
+        for event in event_filter.get_new_entries():
+            handle_event(event)
+        time.sleep(poll_interval)
+
 # 合约时间处理
 def main(event_filter_):
     # block_filter = web3_.eth.filter('latest')

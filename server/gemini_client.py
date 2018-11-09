@@ -85,7 +85,7 @@ def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
-    with grpc.insecure_channel('172.16.1.176:50053') as channel:
+    with grpc.insecure_channel('172.16.1.175:50053') as channel:
         stub = gemini_pb2_grpc.geminiStub(channel)
 
         response = stub.login(gemini_pb2.loginRequest(account='yl001',password='123'))
