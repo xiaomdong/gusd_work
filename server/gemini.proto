@@ -70,6 +70,8 @@ message infoReply {
   uint32 gusd       = 6;
   string depositEthaddress  = 7;
   string depositBankAccount = 8;
+  string withdrawBankAccount = 9;
+  string withdrawEthaddress  = 10;
 }
 
 

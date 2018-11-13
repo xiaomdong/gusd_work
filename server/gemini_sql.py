@@ -22,6 +22,8 @@ SQL_UPDATE_GUSD_USER_TABLE = "update %s set gusd=? where account=?" % (USER_TABL
 SQL_UPDATE_USD_USER_TABLE = "update %s set usd=? where account=?" % (USER_TABLE)
 SQL_GETBALANCE_USER_TABLE = "select usd,gusd from %s where account=?" % (USER_TABLE)
 
+SQL_UPDATE_USD_GUSD_USER_TABLE = "update %s set usd=? gusd=? where account=?" % (USER_TABLE)
+
 SQL_INSERT_RECORD_TABLE = "insert into %s values (?,?,?,?,?,?)" % (RECORD_TABLE)
 SQL_SELECT_RECORD_TABLE = "select * from %s where account=? or otherAccount=?" % (RECORD_TABLE)
 SQL_SELECT_ALL_RECORD_TABLE = "select * from %s " % (RECORD_TABLE)
@@ -158,6 +160,14 @@ class geminiSql():
         tmp = (account,)
         return self.runSql(SQL_GETBALANCE_USER_TABLE, tmp)
 
+    def updateBalanceWithoutCommit(self, account,usd,gusd):
+        tmp = (account,usd,gusd)
+        return self.runSqlWithoutCommit(SQL_UPDATE_USD_GUSD_USER_TABLE, tmp)
+
+    def updateBalance(self, account,usd,gusd):
+        tmp = (account,usd,gusd)
+        return self.runSql(SQL_UPDATE_USD_GUSD_USER_TABLE, tmp)
+
     def insertRecord(self, account, time, operation, otherAccount, value, recordIndex):
         tmp = (account, time, operation, otherAccount, value, recordIndex)
         # print(tmp)
@@ -186,6 +196,7 @@ class gemini():
 
     def exit(self):
         self.sql.close()
+
 
     def getBalance(self,account):
         result = self.sql.getBalance(account)
@@ -281,6 +292,34 @@ class gemini():
             else:
                 return None
 
+    # gusd兑换USD,此函数调用后，接着调用归集账户向客户的提现账户转账
+    def exchangeUSD(self, account, value):
+        if(value==0):
+            # 提现0，不用操作
+            return None
+
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        result = self.sql.getBalance(account)
+
+        if (result == []):
+            # 没有查询到用户的记录
+            return None
+        else:
+            if (result[0][0] >= value): #[0][0]是USD [0][1]是GUSD
+                _value = result[0][0] + value
+                if(self.sql.updateUSDWithoutCommit(account, _value) == None):
+                    # sql 操作失败，这里暂时都不处理
+                    return None
+                operation = EXCHANGE_USD_OPERATION
+                otherAccount = COMPANY_BANK_COLLECTION_ACCOUNT #银行归集账户
+                recordIndex = self.sql.getRecordIndex() + 1
+                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
+                    # sql 操作失败，这里暂时都不处理
+                    return None
+                return (_value,value) #返回兑换后的USD余额，和兑换的数目
+            else:
+                return None
 
     # 存款GUSD，由客户触发，web3模块收到转账event后调用此函数
     def depositGUSD(self, account, value):
@@ -339,5 +378,39 @@ class gemini():
                     # sql 操作失败，这里暂时都不处理
                     return None
                 return (_value,value)
+            else:
+                return None
+
+
+    # usd兑换GUSD,usd账户减少，gusd账户增加，总和不变
+    def exchangeGUSD(self, account, value):
+        if(value==0):
+            # 提现0，不用操作
+            return None
+
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        result = self.sql.getBalance(account)
+        if(result == None):
+            # sql执行失败
+            return None
+
+
+        if (result == []):
+            # 查询不到用户数据
+            return None
+        else:
+            if (result[0][0] >= value): #[0][0]是USD [0][1]是GUSD
+                _value = result[0][0] - value
+                if(self.sql.updateUSDWithoutCommit(account, _value) == None):
+                    # sql 操作失败，这里暂时都不处理
+                    return None
+                operation = EXCHANGE_GUSD_OPERATION
+                otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS
+                recordIndex = self.sql.getRecordIndex() + 1
+                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
+                    # sql 操作失败，这里暂时都不处理
+                    return None
+                return (_value,value) #返回兑换后的USD余额，和兑换的数目
             else:
                 return None

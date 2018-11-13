@@ -60,8 +60,8 @@ if __name__ == '__main__':
     #
     # _sweeper = '0x06f81141909619a79D0F7F46e5d9F35419eaacF1'
     #
-    # signer1 = '0xb0B0536F6FE2e6D0c611a16F7F5e6717B9bb6C12'
-    # signer2 = '0x335de6AFAdD5d5adF4EE97787B48470A8cED4912'
+    # signer1 = '0xb0B0536F6FE2e6D0c611a16F7F5e6717B9bb6C12'  #私钥是ccb2a9f96a56c21c7eb73467876b141aaa9ccb857abf422f0aba203f858954cc
+    # signer2 = '0x335de6AFAdD5d5adF4EE97787B48470A8cED4912'  #私钥是193b422de71590277ef2b2035045cfb7d9eb9743d004ab8c15c5e9f0d1bc9d4a
 
 
     # #for true eth private net
@@ -71,8 +71,8 @@ if __name__ == '__main__':
     #
     # _sweeper = '0xa8512Eab06Ed25F8452Bf7A99E5C65135f822bF3'
     #
-    # signer1 = '0xa92ac0e022f5a4e3eA53D868CE2F9AEDA1Cf2989'
-    # signer2 = '0xD34eEAea22537317145d9A29352Db6c1cfa8493f'
+    # signer1 = '0xa92ac0e022f5a4e3eA53D868CE2F9AEDA1Cf2989'  #0xe190626c281b31747956178c088785723b8d8dbbd7810b33d180b6c42358ea5a
+    # signer2 = '0xD34eEAea22537317145d9A29352Db6c1cfa8493f'  #0x81e36dfae9f79f72b63246e51e189859da4241849cb266c1abc8c16d6e3b389e
     # _defaultTimeLock  = 3600
     # _extendedTimeLock = 86400
     # _primary = _sweeper
