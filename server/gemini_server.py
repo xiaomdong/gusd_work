@@ -182,9 +182,29 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
         self.threadLock.release()
         return gemini_pb2.exchangeUSDReply(message='OK',usd=usdValue,gusd=gusdValue)
 
-    #提现USD
+    # 提现USD
+    # 如果 value 小于 Gemini 的银行归集帐号余额,从银行归集帐号向客戶转账 value 美元
+    # 如果 value 大于 Gemini 的银行归集帐号余额:
+    # 1.Gemini 从银行监管账戶向银行归集帐号转账 value 美元,
+    # 2.Sweeper 地址向 0 地址转账 value GUSD, burn 操作，设置 GUSD totalsupply 减少 value
+    # 3.从银行归集帐号向客戶转账 value 美元
     def withdrawalUSD(self, request, context):
         self.threadLock.acquire()
+
+        #获取USD余额
+        balance = self.gemini_sql.getBalance(request.account)
+        if(balance == None or balance==[] ):
+            return gemini_pb2.balanceReply(message='ERR', usd=0, gusd=0)
+        if(request.usd > balance[0]):
+            return gemini_pb2.withdrawalUSDReply(message='Insufficient balance', usd=balance[0], gusd=balance[1])
+
+        geminiCollectiveBalance=control.bankBlance(control.COLLECTIVE_BANK_ACCOUNT)
+        if(balance>geminiCollectiveBalance):
+            control.bankTransfer(control.REGULATORY_BANK_ACCOUNT,control.COLLECTIVE_BANK_ACCOUNT,request.usd)
+            control.gusd_burn(request.usd)
+
+        control.bankTransfer(control.COLLECTIVE_BANK_ACCOUNT, request.withdrawBankAccount, request.usd)
+        self.gemini_sql.withdrawalUSD(request.account,request.usd)
         self.threadLock.release()
         return gemini_pb2.withdrawalUSDReply(message='OK',usd=100,gusd=100)
 
