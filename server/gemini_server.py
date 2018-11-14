@@ -1,18 +1,21 @@
+# python -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. ./gemini.proto
+
+import datetime
 from concurrent import futures
 import time
 import threading
 import grpc
+
 import sys
+sys.path.append("/home/test/PycharmProjects/gusd_work/server")
 
 import gemini_pb2
 import gemini_pb2_grpc
 import gemini_sql
 import control
-
+from bank import bank_sql
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
-
-sys.path.append("/home/test/PycharmProjects/gusd_work/server")
 
 class gemini_server(gemini_pb2_grpc.geminiServicer):
     def __init__(self):
@@ -49,7 +52,6 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
                                 DepositEthaddress)
         self.threadLock.release()
         return gemini_pb2.registerReply(message='OK')
-
 
     # 获取用户余额
     # GUSD可以不加入到数据库中,暂时不改写此处代码
@@ -107,7 +109,6 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
                                     withdrawBankAccount = user[4],
                                     withdrawEthaddress = user[5])
 
-
     # USD兑换GUSD
     # USD减少
     # GUSD增加
@@ -134,7 +135,6 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
 
         # 获取sweeper地址的GUSD余额
         sweeperGusdValue = control.getGUSDBalance(0xa8512Eab06Ed25F8452Bf7A99E5C65135f822bF3)
-
 
         if(sweeperGusdValue < request.usd):
             # sweeper账户没有足够的GUSD
@@ -257,9 +257,30 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
 
     # 银行向gemini传递归集账户变动的事件
     # 银行向gemini传递监管账户变动的事件
+    # 这里仅仅处理用户存款通知
     def bankInfo(self,request, context):
         print(request)
         self.threadLock.acquire()
+
+        if(request.otherAccount == control.GEMINI_COLLECTIVE and request.operation == bank_sql.TRANSER_OPERATION):
+            balance = self.gemini_sql.getBalance(request.account)
+            if (balance == None or balance == []):
+                return gemini_pb2.bankInfoReply(message='ERR')
+            usdValue = balance[0] + request.value
+
+            result=self.gemini_sql.depositUSD(request.account,request.account.value)
+            if(result == None):
+                return gemini_pb2.bankInfoReply(message='ERR')
+
+            time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            operation = self.gemini_sql.DEPOSIT_USD_OPERATION
+            otherAccount = control.GEMINI_COLLECTIVE
+            value = usdValue
+            recordIndex = self.gemini_sql.sql.getRecordIndex() + 1
+            addedinfo = request.recordIndex
+            self.gemini_sql.insertRecord(request.account, time, operation, otherAccount, value, recordIndex, addedinfo)
+            self.gemini_sql.sql.insertRecord()
+
         self.threadLock.release()
         return gemini_pb2.bankInfoReply(message='OK')
 

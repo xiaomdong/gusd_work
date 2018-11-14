@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 from enum import Enum
+import control
 
 GEMINI_SQL_DB = "gemini.db"
 USER_TABLE = "user"
@@ -12,7 +13,7 @@ SQL_SEARCH_RECORD_TABLE = "select * from sqlite_master where type = 'table' and 
 
 SQL_CREATE_USER_TABLE = "create table %s (account text primary key, password text, mail text, phone text, withdrawBankAccount text, withdrawEthaddress text, DepositEthaddress text, USD integer, GUSD integer)" % (
     USER_TABLE)
-SQL_CREATE_RECORD_TABLE = "create table %s (account text, time  text, operation integer, otherAccount text, value integer,recordIndex integer primary key)" % (
+SQL_CREATE_RECORD_TABLE = "create table %s (account text, time  text, operation integer, otherAccount text, value integer, recordIndex integer primary key, addedinfo text)" % (
     RECORD_TABLE)
 
 SQL_INSERT_USER_TABLE = "insert into %s values (?,?,?,?,?,?,?,?,?)" % (USER_TABLE)
@@ -24,7 +25,7 @@ SQL_GETBALANCE_USER_TABLE = "select usd,gusd from %s where account=?" % (USER_TA
 
 SQL_UPDATE_USD_GUSD_USER_TABLE = "update %s set usd=? gusd=? where account=?" % (USER_TABLE)
 
-SQL_INSERT_RECORD_TABLE = "insert into %s values (?,?,?,?,?,?)" % (RECORD_TABLE)
+SQL_INSERT_RECORD_TABLE = "insert into %s values (?,?,?,?,?,?,?)" % (RECORD_TABLE)
 SQL_SELECT_RECORD_TABLE = "select * from %s where account=? or otherAccount=?" % (RECORD_TABLE)
 SQL_SELECT_ALL_RECORD_TABLE = "select * from %s " % (RECORD_TABLE)
 
@@ -41,11 +42,9 @@ WITHDRAWAL_SUPERVISION_USD_OPERATION = 9
 BURN_GUSD_OPERATION = 10
 PRINT_GUSD_OPERATION = 11
 
-COMPANY_BANK_COLLECTION_ACCOUNT = "GEMINI_COLLECTION_ACCOUNT"
-COMPANY_BANK_SUPERVISION_ACCOUNT = "GEMINI_SUPERVISION_ACCOUNT"
-COMPANY_SERVER_SWEEPER_ADDRESS = "0X12345678"
-COMPANY_SERVER_SWEEPER_PASSWORD = "12345678"
-
+COMPANY_BANK_COLLECTION_ACCOUNT  = control.COLLECTIVE_BANK_ACCOUNT
+COMPANY_BANK_SUPERVISION_ACCOUNT = control.REGULATORY_BANK_ACCOUNT
+COMPANY_SERVER_SWEEPER_ADDRESS = control.SWEEPER_ETH_ACCOUNT
 
 class geminiSql():
     def __init__(self, db_path=GEMINI_SQL_DB):
@@ -168,8 +167,8 @@ class geminiSql():
         tmp = (account,usd,gusd)
         return self.runSql(SQL_UPDATE_USD_GUSD_USER_TABLE, tmp)
 
-    def insertRecord(self, account, time, operation, otherAccount, value, recordIndex):
-        tmp = (account, time, operation, otherAccount, value, recordIndex)
+    def insertRecord(self, account, time, operation, otherAccount, value, recordIndex, addedinfo):
+        tmp = (account, time, operation, otherAccount, value, recordIndex, addedinfo)
         # print(tmp)
         return self.runSqlwithCommit(SQL_INSERT_RECORD_TABLE, tmp)
 
@@ -223,7 +222,7 @@ class gemini():
             operation=CREATE_USER_OPERATION
             otherAccount = account + "," + password + "," + mail + "," + phone + "," + withdrawBankAccount + "," + withdrawEthaddress + "," + DepositEthaddress + ","
             recordIndex = self.sql.getRecordIndex() + 1
-            if (self.sql.insertRecord(account, time, operation, otherAccount, 0, recordIndex) == None):
+            if (self.sql.insertRecord(account, time, operation, otherAccount, 0, recordIndex , "") == None):
                 # sql 操作失败，这里暂时都不处理
                 return None
         else:
@@ -233,7 +232,7 @@ class gemini():
             operation=UPDATE_USER_OPERATION
             otherAccount = account + "," + password + "," + mail + "," + phone + "," + withdrawBankAccount + "," + withdrawEthaddress + "," + DepositEthaddress + ","
             recordIndex = self.sql.getRecordIndex() + 1
-            if (self.sql.insertRecord(account, time, operation, otherAccount, 0, recordIndex) == None):
+            if (self.sql.insertRecord(account, time, operation, otherAccount, 0, recordIndex, "") == None):
                 # sql 操作失败，这里暂时都不处理
                 return None
         return "OK"
@@ -249,7 +248,8 @@ class gemini():
 
         if (result == []):
             #没有查询到用户的记录
-            return "NO_USER"
+            # return "NO_USER"
+            return None
         else:
             _value = result[0][0] + value #[0][0]是USD [0][1]是GUSD
             if(self.sql.updateUSDWithoutCommit(account, _value) == None):
@@ -258,7 +258,7 @@ class gemini():
             operation = DEPOSIT_USD_OPERATION
             otherAccount = COMPANY_BANK_COLLECTION_ACCOUNT  #银行归集账户
             recordIndex = self.sql.getRecordIndex() + 1
-            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
+            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, "") == None):
                 # sql 操作失败，这里暂时都不处理
                 return None
             return  (_value,value) #返回存款的USD余额，和存款的数目
@@ -321,67 +321,67 @@ class gemini():
             else:
                 return None
 
-    # # 存款GUSD，由客户触发，web3模块收到转账event后调用此函数
-    # # 暂时废弃不用
-    # def depositGUSD(self, account, value):
-    #     time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    #
-    #     result = self.sql.getBalance(account)
-    #     if(result == None):
-    #         # sql执行失败
-    #         return None
-    #
-    #     if (result == []):
-    #         # 查询不到用户数据
-    #         return None
-    #     else:
-    #         _value = result[0][1] + value #[0][0]是USD [0][1]是GUSD
-    #         if( self.sql.updateGUSDWithoutCommit(account, _value) == None):
-    #             # sql 操作失败，这里暂时都不处理
-    #             return None
-    #         operation = DEPOSIT_GUSD_OPERATION
-    #         otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS #SWEEPER地址
-    #         recordIndex = self.sql.getRecordIndex() + 1
-    #         if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
-    #             # sql 操作失败，这里暂时都不处理
-    #             return None
-    #
-    #         return (_value, value)  # 返回存款的GUSD余额，和存款的数目
+    # 存款GUSD，由客户触发，web3模块收到转账event后调用此函数
+    # 暂时废弃不用
+    def depositGUSD(self, account, value):
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        result = self.sql.getBalance(account)
+        if(result == None):
+            # sql执行失败
+            return None
+
+        if (result == []):
+            # 查询不到用户数据
+            return None
+        else:
+            _value = result[0][1] + value #[0][0]是USD [0][1]是GUSD
+            if( self.sql.updateGUSDWithoutCommit(account, _value) == None):
+                # sql 操作失败，这里暂时都不处理
+                return None
+            operation = DEPOSIT_GUSD_OPERATION
+            otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS #SWEEPER地址
+            recordIndex = self.sql.getRecordIndex() + 1
+            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, "") == None):
+                # sql 操作失败，这里暂时都不处理
+                return None
+
+            return (_value, value)  # 返回存款的GUSD余额，和存款的数目
 
 
-    # # 提现GUSD,通过web3模块调用gusd转账，从SWEEPER地址向客户提现的GUSD地址转账
-    # # 暂时废弃不用
-    # def withdrawalGUSD(self, account, value):
-    #     if(value==0):
-    #         # 提现0，不用操作
-    #         return None
-    #
-    #     time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    #
-    #     result = self.sql.getBalance(account)
-    #     if(result == None):
-    #         # sql执行失败
-    #         return None
-    #
-    #
-    #     if (result == []):
-    #         # 查询不到用户数据
-    #         return None
-    #     else:
-    #         if (result[0][1] >= value): #[0][0]是USD [0][1]是GUSD
-    #             _value = result[0][1] - value
-    #             if(self.sql.updateGUSDWithoutCommit(account, _value) == None):
-    #                 # sql 操作失败，这里暂时都不处理
-    #                 return None
-    #             operation = WITHDRAWAL_GUSD_OPERATION
-    #             otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS
-    #             recordIndex = self.sql.getRecordIndex() + 1
-    #             if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
-    #                 # sql 操作失败，这里暂时都不处理
-    #                 return None
-    #             return (_value,value)
-    #         else:
-    #             return None
+    # 提现GUSD,通过web3模块调用gusd转账，从SWEEPER地址向客户提现的GUSD地址转账
+    # 暂时废弃不用
+    def withdrawalGUSD(self, account, value):
+        if(value==0):
+            # 提现0，不用操作
+            return None
+
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        result = self.sql.getBalance(account)
+        if(result == None):
+            # sql执行失败
+            return None
+
+
+        if (result == []):
+            # 查询不到用户数据
+            return None
+        else:
+            if (result[0][1] >= value): #[0][0]是USD [0][1]是GUSD
+                _value = result[0][1] - value
+                if(self.sql.updateGUSDWithoutCommit(account, _value) == None):
+                    # sql 操作失败，这里暂时都不处理
+                    return None
+                operation = WITHDRAWAL_GUSD_OPERATION
+                otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS
+                recordIndex = self.sql.getRecordIndex() + 1
+                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, "") == None):
+                    # sql 操作失败，这里暂时都不处理
+                    return None
+                return (_value,value)
+            else:
+                return None
 
 
     # usd兑换GUSD,usd账户减少，gusd账户增加，总和不变

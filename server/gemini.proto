@@ -155,6 +155,7 @@ message bankInfoRequest {
   uint32 operation    = 3;
   string otherAccount = 4;
   uint32 value        = 5;
+  string recordIndex  = 6;
 }
 
 // The response message containing the greetings

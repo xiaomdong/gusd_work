@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 from enum import Enum
+import control
 
 BANK_SQL_DB = "bank.db"
 BALANCE_TABLE = "balance"
@@ -125,7 +126,10 @@ class bankSql():
     def insertRecord(self, account, time, operation, otherAccount, value, recordIndex):
         tmp = (account, time, operation, otherAccount, value, recordIndex)
         # print(tmp)
-        return self.runSqlwithCommit(SQL_INSERT_RECORD_TABLE, tmp)
+        result = self.runSqlwithCommit(SQL_INSERT_RECORD_TABLE, tmp)
+        if(result != None):
+            control.bankInfo(account, time, operation, otherAccount, value, recordIndex)
+        return result
 
     def getRecord(self, account):
         tmp = (account,account)
@@ -152,6 +156,10 @@ class bank():
 
     def getBalance(self,account):
         result = self.sql.getBalance(account)
+        if(result == None):
+            # sql 操作失败，这里暂时都不处理
+            return None
+
         if (result == []):
             return 0
         else:
@@ -162,6 +170,10 @@ class bank():
         time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         result = self.sql.getBalance(account)
+        if(result == None):
+            # sql 操作失败，这里暂时都不处理
+            return None
+
         if (result == []):
             self.sql.insertBalanceWithoutCommit(account, value)
             operation = CREATE_OPERATION
@@ -184,6 +196,10 @@ class bank():
         time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         result = self.sql.getBalance(account)
+        if(result == None):
+            # sql 操作失败，这里暂时都不处理
+            return None
+
         if (result == []):
             return None
         else:

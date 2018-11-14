@@ -128,12 +128,16 @@ class classDecorator(type):
             dct[name] = value
         return type.__new__(cls, name, bases, dct)
 
+import logging
+logging.basicConfig(level=logging.INFO,format='%(asctime)s %(filename)s %(module)s %(funcName)s [line:%(lineno)d] %(message)s')
+
 
 if __name__ == '__main__':
-    printdebug("aa",u"aa")
-    printdebug(u"aa")
-    printdebug(u"aa 你好")
-    controlDebug(u"连接数据库成功")
-    controlDebug("连接数据库成功")
-    controlDebug("OK : sqlUserControl.__init__ 连接数据库成功")
+    # printdebug("aa",u"aa")
+    # printdebug(u"aa")
+    # printdebug(u"aa 你好")
+    # controlDebug(u"连接数据库成功")
+    # controlDebug("连接数据库成功")
+    # controlDebug("OK : sqlUserControl.__init__ 连接数据库成功")
 
+    logging.info("test")

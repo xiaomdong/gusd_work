@@ -139,7 +139,7 @@ def run():
             print("received          : " + str(response));
         print("-------------------------------------------")
 
-        response = stub.bankInfo(gemini_pb2.bankInfoRequest(account='xd2',time='123123',operation=1,otherAccount='xd1',value=3))
+        response = stub.bankInfo(gemini_pb2.bankInfoRequest(account='xd2',time='123123',operation=1,otherAccount='xd1',value=3,recordIndex='1'))
         print("bankInfo    : account='xd2',time='123123',operation=1,otherAccount='xd1',value=3")
         print("received    : " + str(response));
         print("-------------------------------------------")
