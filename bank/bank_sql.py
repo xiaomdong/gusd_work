@@ -128,6 +128,7 @@ class bankSql():
         # print(tmp)
         result = self.runSqlwithCommit(SQL_INSERT_RECORD_TABLE, tmp)
         if(result != None):
+            # 这里所有的变化都向genemi发送
             control.bankInfo(account, time, operation, otherAccount, value, recordIndex)
         return result
 
@@ -137,6 +138,8 @@ class bankSql():
 
     def getRecordIndex(self):
         result = self.runSqlWithoutData(SQL_SELECT_ALL_RECORD_TABLE)
+        if(result==None):
+            return None
         return len(result)
 
     def close(self):
@@ -175,19 +178,30 @@ class bank():
             return None
 
         if (result == []):
-            self.sql.insertBalanceWithoutCommit(account, value)
+            if(self.sql.insertBalanceWithoutCommit(account, value)==None):
+                # sql 操作失败，这里暂时都不处理
+                return None
             operation = CREATE_OPERATION
             otherAccount = 0
             recordIndex = self.sql.getRecordIndex() + 1
-            self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)
+            if(recordIndex==None):
+                return None
+            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
+                return None
             return recordIndex
         else:
             _value = result[0][1] + value
-            self.sql.updateBalanceWithoutCommit(account, _value)
-            operation = WITHDRAWAL_OPERATION
+            if(self.sql.updateBalanceWithoutCommit(account, _value)==None):
+                # sql 操作失败，这里暂时都不处理
+                return None
+            operation = DEPOSIT_OPERATION
             otherAccount = 0
             recordIndex = self.sql.getRecordIndex() + 1
-            self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)
+            if(recordIndex==None):
+                return None
+            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
+                # sql 操作失败，这里暂时都不处理
+                return None
             return recordIndex
 
     # 提现
@@ -207,11 +221,15 @@ class bank():
         else:
             if (result[0][1] >= value):
                 _value = result[0][1] - value
-                self.sql.updateBalanceWithoutCommit(account, _value)
-                operation = DEPOSIT_OPERATION
+                if(self.sql.updateBalanceWithoutCommit(account, _value)==None):
+                    return None
+                operation = WITHDRAWAL_OPERATION
                 otherAccount = 0
                 recordIndex = self.sql.getRecordIndex() + 1
-                self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)
+                if (recordIndex == None):
+                    return None
+                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)==None):
+                    return None
                 return (recordIndex,_value,value)
             else:
                 return None
@@ -235,12 +253,17 @@ class bank():
         if (result[0][1] >= value):
             _value = result[0][1] - value
             _blance= blance[0][1] + value
-            self.sql.updateBalanceWithoutCommit(account, _value)
-            self.sql.updateBalanceWithoutCommit(toAccount, _blance)
+            if(self.sql.updateBalanceWithoutCommit(account, _value)==None):
+                return None
+            if(self.sql.updateBalanceWithoutCommit(toAccount, _blance)==None):
+                return None
             operation = TRANSER_OPERATION
             otherAccount = toAccount
             recordIndex = self.sql.getRecordIndex() + 1
-            self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)
+            if(recordIndex==None):
+                return None
+            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)==None):
+                return None
             return (recordIndex,_value,value)
         else:
             return None

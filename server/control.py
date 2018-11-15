@@ -149,7 +149,7 @@ def sweeperTransfer(addr,value):
         txhash =ERC20ProxyContract.functions.transfer(addr,value).transact({'from': SWEEPER_ETH_ACCOUNT})
         web3.eth.waitForTransactionReceipt(txhash)
         g_log.info("sweeper send " + str(value) + " GUSD to " + addr)
-        return "OK"
+        return txhash
     except Exception as e:
         g_log.info("sweeper send " + str(value) + " GUSD to " + addr)
         g_log.error("something err:%s" % (e))
@@ -163,7 +163,7 @@ def transferToSweeper(addr,value):
         txhash =ERC20ProxyContract.functions.transfer(SWEEPER_ETH_ACCOUNT,value).transact({'from': addr})
         web3.eth.waitForTransactionReceipt(txhash)
         g_log.info(addr + " send " + str(value) + " GUSD to sweeper")
-        return "OK"
+        return txhash
     except Exception as e:
         g_log.info(addr + " send " + str(value) + " GUSD to sweeper")
         g_log.error("something err:%s" % (e))
@@ -177,7 +177,7 @@ def transfer(fromaddr,toaddr,value):
         txhash =ERC20ProxyContract.functions.transfer(toaddr,value).transact({'from': fromaddr})
         web3.eth.waitForTransactionReceipt(txhash)
         g_log.info(fromaddr + " send " + str(value) + " GUSD to " + toaddr)
-        return "OK"
+        return txhash
     except Exception as e:
         g_log.info(fromaddr + " send " + str(value) + " GUSD to " + toaddr)
         g_log.error("something err:%s" % (e))
@@ -191,6 +191,9 @@ def bankBlance(account_):
 
             response = stub.balance(
                 bank_pb2.balanceRequest(account=account_))
+
+            if (response.message != 'OK'):
+                return None
 
             g_log.info(account_ + " bank balance:" + str(response.balance))
             return response.balance
@@ -207,7 +210,11 @@ def bankTransfer(fromAccount_,toAccount_,value_):
                 bank_pb2.transferRequest(fromAccount=fromAccount_,toAccount=toAccount_,value=value_))
             # print("received          : " + response.message + ", " + str(response.balance));
             g_log.info(fromAccount_ + " send " + str(value_) +" usd to "+ toAccount_)
-            return response.balance
+
+            if(response.message != 'OK'):
+                return None
+
+            return response
     except Exception as e:
         g_log.info(fromAccount_ + "send " + str(value_) + " usd to " + toAccount_)
         g_log.error("something err:%s" % (e))
@@ -248,18 +255,18 @@ def gusd_print(money):
         g_log.error("Insufficient account balance!!!: "+str(balance)+" < "+str(money))
         return None
 
-    result=bankTransfer(COLLECTIVE_BANK_ACCOUNT,REGULATORY_BANK_ACCOUNT,money)
+    result=bankTransfer(COLLECTIVE_BANK_ACCOUNT,REGULATORY_BANK_ACCOUNT,money) #result.recordIndex
     if(result ==None):
         return None
 
     if(depositUSD2RegulatoryRecordfun!=None):
-        depositUSD2RegulatoryRecordfun(money, addedinfo)
+        depositUSD2RegulatoryRecordfun(money, result.recordIndex)
     try:
         web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
         txhash=PrintLimiterContract.functions.limitedPrint(SWEEPER_ETH_ACCOUNT, money).transact({'from': SWEEPER_ETH_ACCOUNT})
         web3.eth.waitForTransactionReceipt(txhash)
         g_log.info("print " + str(money) +" GUSD")
-        return "OK"
+        return txhash
     except Exception as e:
         #这里出现错误要尝试操作，如果尝试不成功，需要回退，待添加
         g_log.error("something err:%s" % (e))
@@ -509,8 +516,13 @@ def handle_event(event):
 
         if (event['args']['_to'] == '0x0000000000000000000000000000000000000000'):
             print("burn operation")
+            if(burnGUSDRecordfun!=None):
+                burnGUSDRecordfun(event['args']['_value'],"")
+
         if (event['args']['_from'] == '0x0000000000000000000000000000000000000000'):
             print("print operation")
+            if(printGUSDRecordfun!=None):
+                printGUSDRecordfun(event['args']['_value'],"")
         print("-----------------------------")
 
 #event 循环接收
@@ -534,7 +546,7 @@ if __name__ == '__main__':
 
     gusd_init()
 
-    # gusd_init_print(1000)
+    gusd_init_print(100000)
     bankBlance(REGULATORY_BANK_ACCOUNT)
     bankBlance(COLLECTIVE_BANK_ACCOUNT)
     get_gusd_print()

@@ -27,30 +27,47 @@ class bank_server(bank_pb2_grpc.bankServicer):
         # print(request.value)
         self.threadLock.acquire()
         recordIndex_=self.bankSql.deposit(request.account,request.value)
+        if(recordIndex_==None):
+            self.threadLock.release()
+            return bank_pb2.depositReply(message='ERR', balance=0, recordIndex=0)
         result=self.bankSql.getBalance(request.account)
         self.threadLock.release()
+        if(result==None):
+            return bank_pb2.depositReply(message='ERR', balance=0, recordIndex=recordIndex_)
         return bank_pb2.depositReply(message='OK',balance=result,recordIndex=recordIndex_)
-        return bank_pb2.depositReply(message='OK',balance=result)
+
     def withdrawal(self, request, context):
         self.threadLock.acquire()
         result=self.bankSql.withdrawal(request.account,request.value)
+        if(result==None):
+            self.threadLock.release()
+            return bank_pb2.withdrawalReply(message='ERR', balance=0, recordIndex=0)
         recordIndex_=result[0]
         result = self.bankSql.getBalance(request.account)
         self.threadLock.release()
+        if (result == None):
+            return bank_pb2.withdrawalReply(message='ERR', balance=0, recordIndex=recordIndex_)
         return bank_pb2.withdrawalReply(message='OK',balance=result,recordIndex=recordIndex_)
 
     def balance(self, request, context):
         self.threadLock.acquire()
         result = self.bankSql.getBalance(request.account)
+        if(request==None):
+            return bank_pb2.balanceReply(message='ERR', balance=0)
         self.threadLock.release()
         return bank_pb2.balanceReply(message='OK',balance=result)
 
     def transfer(self, request, context):
         self.threadLock.acquire()
         result = self.bankSql.transfer(request.fromAccount,request.toAccount,request.value)
+        if(result ==None):
+            self.threadLock.release()
+            return bank_pb2.transferReply(message='ERR', balance=0, recordIndex=0)
         recordIndex_ = result[0]
         result = self.bankSql.getBalance(request.fromAccount)
         self.threadLock.release()
+        if(result==None):
+            return bank_pb2.transferReply(message='ERR', balance=0, recordIndex=recordIndex_)
         return bank_pb2.transferReply(message='OK',balance=result,recordIndex=recordIndex_)
 
     def getRecord(self, request, context):
