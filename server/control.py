@@ -59,6 +59,16 @@ g_web3 = None
 
 eventFilterDic = {'PrintingLocked': None}
 
+burnGUSDRecordfun=None
+printGUSDRecordfun=None
+depositUSD2RegulatoryRecordfun=None
+withdrawalUSD2CollectionRecordfun=None
+
+def setEventRecordFun(burnGUSDRecordfun_,printGUSDRecordfun_,depositUSD2RegulatoryRecordfun_,withdrawalUSD2CollectionRecordfun_):
+    burnGUSDRecordfun=burnGUSDRecordfun_
+    printGUSDRecordfun=printGUSDRecordfun_
+    depositUSD2RegulatoryRecordfun=depositUSD2RegulatoryRecordfun_
+    withdrawalUSD2CollectionRecordfun=withdrawalUSD2CollectionRecordfun_
 
 #初始化函数，设置GUSD的合约对象
 def gusd_init():
@@ -113,7 +123,7 @@ def create_eth_addr():
     web3 = g_web3
     try:
         address=web3.personal.newAccount(ACCOUNT_ETH_PASSWORD)
-        g_log.info(":"+address)
+        g_log.info(address)
         return address
     except Exception as e:
         g_log.error("something err:%s" % (e))
@@ -242,6 +252,8 @@ def gusd_print(money):
     if(result ==None):
         return None
 
+    if(depositUSD2RegulatoryRecordfun!=None):
+        depositUSD2RegulatoryRecordfun(money, addedinfo)
     try:
         web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
         txhash=PrintLimiterContract.functions.limitedPrint(SWEEPER_ETH_ACCOUNT, money).transact({'from': SWEEPER_ETH_ACCOUNT})
@@ -476,6 +488,7 @@ def request_loop(web3):
         time.sleep(10)
 
 
+
 #event处理函数
 def handle_event(event):
     web3 = g_web3
@@ -490,11 +503,14 @@ def handle_event(event):
                 event['args']['_value']))
 
     if (event['event'] == "Transfer"):
+        # print(event)
         print(event['event'] + ":" + event['args']['_from'] + "," + event['args']['_to'] + "," + str(
             event['args']['_value']))
+
         if (event['args']['_to'] == '0x0000000000000000000000000000000000000000'):
             print("burn operation")
-
+        if (event['args']['_from'] == '0x0000000000000000000000000000000000000000'):
+            print("print operation")
         print("-----------------------------")
 
 #event 循环接收
@@ -505,6 +521,13 @@ def event_loop(eventFilterDic, poll_interval):
                 for event in v.get_new_entries():
                     handle_event(event)
         time.sleep(poll_interval)
+
+def event_thread_run():
+    eventFilterDic["PrintingLocked"] = ERC20ImplContract.events.PrintingLocked.createFilter(fromBlock='latest')
+    eventFilterDic["PrintingConfirmed"] = ERC20ImplContract.events.PrintingConfirmed.createFilter(fromBlock='latest')
+    eventFilterDic["Transfer"] = ERC20ProxyContract.events.Transfer.createFilter(fromBlock='latest')
+    eventThread = threading.Thread(target=event_loop, args=(eventFilterDic, 5), daemon=True)
+    eventThread.start()
 
 
 if __name__ == '__main__':
@@ -548,20 +571,59 @@ if __name__ == '__main__':
     get_gusd_print()
 
 
-    eventFilterDic["PrintingLocked"] = ERC20ImplContract.events.PrintingLocked.createFilter(fromBlock='latest')
-    eventFilterDic["PrintingConfirmed"] = ERC20ImplContract.events.PrintingConfirmed.createFilter(fromBlock='latest')
-    eventFilterDic["Transfer"] = ERC20ProxyContract.events.Transfer.createFilter(fromBlock='latest')
+    # eventFilterDic["PrintingLocked"] = ERC20ImplContract.events.PrintingLocked.createFilter(fromBlock='latest')
+    # eventFilterDic["PrintingConfirmed"] = ERC20ImplContract.events.PrintingConfirmed.createFilter(fromBlock='latest')
+    # eventFilterDic["Transfer"] = ERC20ProxyContract.events.Transfer.createFilter(fromBlock='latest')
+    #
+    # eventThread = threading.Thread(target=event_loop, args=(eventFilterDic, 5), daemon=True)
+    # eventThread.start()
+    event_thread_run()
 
-    eventThread = threading.Thread(target=event_loop, args=(eventFilterDic, 5), daemon=True)
-    eventThread.start()
+    # print("==========================================")
+    # print(getGUSDBalance('0xD34eEAea22537317145d9A29352Db6c1cfa8493f'))
+    # print("==========================================")
+    #
+    # print("==========================================")
+    # print(create_eth_addr())
+    # print("==========================================")
 
-    print("==========================================")
-    print(getGUSDBalance('0xD34eEAea22537317145d9A29352Db6c1cfa8493f'))
-    print("==========================================")
 
-    print("==========================================")
-    print(create_eth_addr())
-    print("==========================================")
+    # gusd_init_print(1000)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    bankBlance(COLLECTIVE_BANK_ACCOUNT)
+    get_gusd_print()
+
+    gusd_print(10000)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    get_gusd_print()
+    gusd_print(100)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    get_gusd_print()
+    gusd_print(1000)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    get_gusd_print()
+    gusd_print(55555)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    get_gusd_print()
+
+    gusd_print(555555)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    get_gusd_print()
+
+    gusd_burn(55555)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    get_gusd_print()
+    gusd_burn(1000)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    get_gusd_print()
+    gusd_burn(100)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    get_gusd_print()
+    gusd_burn(10000)
+    bankBlance(REGULATORY_BANK_ACCOUNT)
+    bankBlance(COLLECTIVE_BANK_ACCOUNT)
+    get_gusd_print()
+
 
     while (1):
         time.sleep(10)

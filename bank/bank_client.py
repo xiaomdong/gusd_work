@@ -92,17 +92,17 @@ def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
-    with grpc.insecure_channel('172.16.1.176:50052') as channel:
+    with grpc.insecure_channel('127.0.0.1:50052') as channel:
         stub = bank_pb2_grpc.bankStub(channel)
 
         response = stub.deposit(bank_pb2.depositRequest(account='yl001',value=100))
         print("depositRequest    : account='yl001',value=100")
-        print("received          : " + response.message + ", " +str(response.balance));
+        print("received          : " + response.message + ", " +str(response.balance) +", "+str(response.recordIndex));
         print("-------------------------------------------")
 
         response = stub.withdrawal(bank_pb2.withdrawalRequest(account='yl001',value=100))
         print("withdrawalRequest : account='yl001',value=100")
-        print("received          : " + response.message + ", " +str(response.balance));
+        print("received          : " + response.message + ", " +str(response.balance) +", "+str(response.recordIndex));
         print("-------------------------------------------")
 
         response = stub.balance(bank_pb2.balanceRequest(account='yl001'))
@@ -113,13 +113,13 @@ def run():
 
         response = stub.deposit(bank_pb2.depositRequest(account='yl002',value=100))
         print("depositRequest    : account='yl002',value=100")
-        print("received          : " + response.message + ", " +str(response.balance));
+        print("received          : " + response.message + ", " +str(response.balance) +", "+str(response.recordIndex));
         print("-------------------------------------------")
 
 
         response = stub.transfer(bank_pb2.transferRequest(fromAccount='yl001',toAccount='yl002',value=100))
         print("transferRequest   : fromAccount='yl001',toAccount='yl002',value=100")
-        print("received          : " + response.message + ", " +str(response.balance));
+        print("received          : " + response.message + ", " +str(response.balance) +", "+str(response.recordIndex));
         print("-------------------------------------------")
 
 

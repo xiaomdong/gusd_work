@@ -23,6 +23,7 @@ message depositRequest {
 message depositReply {
   string message = 1;
   uint32 balance = 2;
+  uint32 recordIndex = 3;
 }
 
 
@@ -36,6 +37,7 @@ message withdrawalRequest {
 message withdrawalReply {
   string message = 1;
   uint32 balance = 2;
+  uint32 recordIndex = 3;
 }
 
 // The request message containing the user's name.
@@ -61,6 +63,7 @@ message transferRequest {
 message transferReply {
   string message = 1;
   uint32 balance = 2;
+  uint32 recordIndex = 3;
 }
 
 

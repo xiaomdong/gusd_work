@@ -26,17 +26,18 @@ class bank_server(bank_pb2_grpc.bankServicer):
         # print(request.account)
         # print(request.value)
         self.threadLock.acquire()
-        self.bankSql.deposit(request.account,request.value)
+        recordIndex_=self.bankSql.deposit(request.account,request.value)
         result=self.bankSql.getBalance(request.account)
         self.threadLock.release()
+        return bank_pb2.depositReply(message='OK',balance=result,recordIndex=recordIndex_)
         return bank_pb2.depositReply(message='OK',balance=result)
-
     def withdrawal(self, request, context):
         self.threadLock.acquire()
         result=self.bankSql.withdrawal(request.account,request.value)
+        recordIndex_=result[0]
         result = self.bankSql.getBalance(request.account)
         self.threadLock.release()
-        return bank_pb2.withdrawalReply(message='OK',balance=result)
+        return bank_pb2.withdrawalReply(message='OK',balance=result,recordIndex=recordIndex_)
 
     def balance(self, request, context):
         self.threadLock.acquire()
@@ -47,9 +48,10 @@ class bank_server(bank_pb2_grpc.bankServicer):
     def transfer(self, request, context):
         self.threadLock.acquire()
         result = self.bankSql.transfer(request.fromAccount,request.toAccount,request.value)
+        recordIndex_ = result[0]
         result = self.bankSql.getBalance(request.fromAccount)
         self.threadLock.release()
-        return bank_pb2.transferReply(message='OK',balance=result)
+        return bank_pb2.transferReply(message='OK',balance=result,recordIndex=recordIndex_)
 
     def getRecord(self, request, context):
         # print("getRecord")

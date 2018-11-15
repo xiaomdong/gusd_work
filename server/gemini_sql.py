@@ -37,13 +37,14 @@ DEPOSIT_GUSD_OPERATION = 4
 WITHDRAWAL_GUSD_OPERATION = 5
 EXCHANGE_USD_OPERATION = 6
 EXCHANGE_GUSD_OPERATION = 7
-DEPOSIT_SUPERVISION_USD_OPERATION = 8
-WITHDRAWAL_SUPERVISION_USD_OPERATION = 9
-BURN_GUSD_OPERATION = 10
-PRINT_GUSD_OPERATION = 11
+DEPOSIT_REGULATORY_USD_OPERATION = 8       #未使用 监管账户存款
+WITHDRAWAL_REGULATORY_USD_OPERATION = 9    #未使用 监管账户提取到归结账户
+BURN_GUSD_OPERATION = 10                   #未使用 sweeper账户燃烧gusd
+PRINT_GUSD_OPERATION = 11                  #未使用 sweeper账户发行gusd
+
 
 COMPANY_BANK_COLLECTION_ACCOUNT  = control.COLLECTIVE_BANK_ACCOUNT
-COMPANY_BANK_SUPERVISION_ACCOUNT = control.REGULATORY_BANK_ACCOUNT
+COMPANY_BANK_REGULATORY_ACCOUNT = control.REGULATORY_BANK_ACCOUNT
 COMPANY_SERVER_SWEEPER_ADDRESS = control.SWEEPER_ETH_ACCOUNT
 
 class geminiSql():
@@ -239,7 +240,7 @@ class gemini():
 
 
     # 存款USD,由客户向归集账户转账发起，bank_server发现归集账户余额发生变化事会以RPC方式通知gemini_server，rpc事件分析后，调用此函数
-    def depositUSD(self, account, value):
+    def depositUSD(self, account, value, addedinfo):
         time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         result = self.sql.getBalance(account)
         if(result == None):
@@ -258,13 +259,13 @@ class gemini():
             operation = DEPOSIT_USD_OPERATION
             otherAccount = COMPANY_BANK_COLLECTION_ACCOUNT  #银行归集账户
             recordIndex = self.sql.getRecordIndex() + 1
-            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, "") == None):
+            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                 # sql 操作失败，这里暂时都不处理
                 return None
             return  (_value,value) #返回存款的USD余额，和存款的数目
 
     # 提现USD,此函数调用后，接着调用归集账户向客户的提现账户转账
-    def withdrawalUSD(self, account, value):
+    def withdrawalUSD(self, account, value, addedinfo):
         if(value==0):
             # 提现0，不用操作
             return None
@@ -285,7 +286,7 @@ class gemini():
                 operation = WITHDRAWAL_USD_OPERATION
                 otherAccount = COMPANY_BANK_COLLECTION_ACCOUNT #银行归集账户
                 recordIndex = self.sql.getRecordIndex() + 1
-                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
+                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                     # sql 操作失败，这里暂时都不处理
                     return None
                 return (_value,value) #返回提现后的USD余额，和提现的数目
@@ -293,7 +294,7 @@ class gemini():
                 return None
 
     # gusd兑换USD,此函数调用后，接着调用归集账户向客户的提现账户转账
-    def exchangeUSD(self, account, value):
+    def exchangeUSD(self, account, value, addedinfo):
         if(value==0):
             # 提现0，不用操作
             return None
@@ -312,9 +313,9 @@ class gemini():
                     # sql 操作失败，这里暂时都不处理
                     return None
                 operation = EXCHANGE_USD_OPERATION
-                otherAccount = COMPANY_BANK_COLLECTION_ACCOUNT #银行归集账户
+                otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS #银行归集账户
                 recordIndex = self.sql.getRecordIndex() + 1
-                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
+                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                     # sql 操作失败，这里暂时都不处理
                     return None
                 return (_value,value) #返回兑换后的USD余额，和兑换的数目
@@ -351,7 +352,7 @@ class gemini():
 
     # 提现GUSD,通过web3模块调用gusd转账，从SWEEPER地址向客户提现的GUSD地址转账
     # 暂时废弃不用
-    def withdrawalGUSD(self, account, value):
+    def withdrawalGUSD(self, account, value, addedinfo):
         if(value==0):
             # 提现0，不用操作
             return None
@@ -376,7 +377,7 @@ class gemini():
                 operation = WITHDRAWAL_GUSD_OPERATION
                 otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS
                 recordIndex = self.sql.getRecordIndex() + 1
-                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, "") == None):
+                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                     # sql 操作失败，这里暂时都不处理
                     return None
                 return (_value,value)
@@ -385,7 +386,7 @@ class gemini():
 
 
     # usd兑换GUSD,usd账户减少，gusd账户增加，总和不变
-    def exchangeGUSD(self, account, value):
+    def exchangeGUSD(self, account, value, addedinfo):
         if(value==0):
             # 提现0，不用操作
             return None
@@ -410,9 +411,74 @@ class gemini():
                 operation = EXCHANGE_GUSD_OPERATION
                 otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS
                 recordIndex = self.sql.getRecordIndex() + 1
-                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
+                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                     # sql 操作失败，这里暂时都不处理
                     return None
                 return (_value,value) #返回兑换后的USD余额，和兑换的数目
             else:
                 return None
+
+
+    # record burn gusd
+    def burnGUSD(self,value,addedinfo):
+        if(value==0):
+            # 提现0，不用操作
+            return None
+
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        account   = COMPANY_SERVER_SWEEPER_ADDRESS
+        operation = BURN_GUSD_OPERATION
+        otherAccount = "0"
+        recordIndex = self.sql.getRecordIndex() + 1
+        if (self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
+            # sql 操作失败，这里暂时都不处理
+            return None
+
+
+    # record print gusd
+    def printGUSD(self,value,addedinfo):
+        if(value==0):
+            # 提现0，不用操作
+            return None
+
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        account = "0"
+        operation = PRINT_GUSD_OPERATION
+        otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS
+        recordIndex = self.sql.getRecordIndex() + 1
+        if (self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
+            # sql 操作失败，这里暂时都不处理
+            return None
+
+
+    #record deposit USD to regulatory
+    def depositUSD2Regulatory(self,value,addedinfo):
+        if(value==0):
+            # 提现0，不用操作
+            return None
+
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        account = COMPANY_BANK_COLLECTION_ACCOUNT
+        operation = DEPOSIT_REGULATORY_USD_OPERATION
+        otherAccount = COMPANY_BANK_REGULATORY_ACCOUNT
+        recordIndex = self.sql.getRecordIndex() + 1
+        if (self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
+            # sql 操作失败，这里暂时都不处理
+            return None
+
+
+    #record withdrawal USD to Collection
+    def withdrawalUSD2Collection(self,value,addedinfo):
+        if(value==0):
+            # 提现0，不用操作
+            return None
+
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        account = COMPANY_BANK_REGULATORY_ACCOUNT
+        operation = WITHDRAWAL_REGULATORY_USD_OPERATION
+        otherAccount = COMPANY_BANK_COLLECTION_ACCOUNT
+        recordIndex = self.sql.getRecordIndex() + 1
+        if (self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
+            # sql 操作失败，这里暂时都不处理
+            return None
+

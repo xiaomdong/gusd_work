@@ -33,8 +33,8 @@ class testBank(unittest.TestCase):
     def test_withdrawal(self):
         self.bank.deposit("xd1", 100)
         result = self.bank.withdrawal("xd1", 100)
-        self.assertEqual(result[0], 0)
-        self.assertEqual(result[1], 100)
+        self.assertEqual(result[1], 0)
+        self.assertEqual(result[2], 100)
         value = self.bank.getBalance("xd1")
         self.assertEqual(value, 0)
 
@@ -49,8 +49,8 @@ class testBank(unittest.TestCase):
         self.bank.deposit("xd1", 100)
         self.bank.deposit("xd2", 100)
         result = self.bank.transfer("xd1", "xd2", 100)
-        self.assertEqual(result[0], 0)
-        self.assertEqual(result[1], 100)
+        self.assertEqual(result[1], 0)
+        self.assertEqual(result[2], 100)
 
         value = self.bank.getBalance("xd2")
         self.assertEqual(value, 200)

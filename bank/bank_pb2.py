@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='bank',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\nbank.proto\x12\x04\x62\x61nk\"0\n\x0e\x64\x65positRequest\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\r\"0\n\x0c\x64\x65positReply\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\r\"3\n\x11withdrawalRequest\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\r\"3\n\x0fwithdrawalReply\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\r\"!\n\x0e\x62\x61lanceRequest\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\"0\n\x0c\x62\x61lanceReply\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\r\"H\n\x0ftransferRequest\x12\x13\n\x0b\x66romAccount\x18\x01 \x01(\t\x12\x11\n\ttoAccount\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\r\"1\n\rtransferReply\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\r\"#\n\x10getRecordRequest\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\"g\n\x0egetRecordReply\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\x12\x0c\n\x04time\x18\x02 \x01(\t\x12\x11\n\toperation\x18\x03 \x01(\r\x12\x14\n\x0cotherAccount\x18\x04 \x01(\t\x12\r\n\x05value\x18\x05 \x01(\r2\xad\x02\n\x04\x62\x61nk\x12\x35\n\x07\x64\x65posit\x12\x14.bank.depositRequest\x1a\x12.bank.depositReply\"\x00\x12>\n\nwithdrawal\x12\x17.bank.withdrawalRequest\x1a\x15.bank.withdrawalReply\"\x00\x12\x35\n\x07\x62\x61lance\x12\x14.bank.balanceRequest\x1a\x12.bank.balanceReply\"\x00\x12\x38\n\x08transfer\x12\x15.bank.transferRequest\x1a\x13.bank.transferReply\"\x00\x12=\n\tgetRecord\x12\x16.bank.getRecordRequest\x1a\x14.bank.getRecordReply\"\x00\x30\x01\x62\x06proto3')
+  serialized_pb=_b('\n\nbank.proto\x12\x04\x62\x61nk\"0\n\x0e\x64\x65positRequest\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\r\"E\n\x0c\x64\x65positReply\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\r\x12\x13\n\x0brecordIndex\x18\x03 \x01(\r\"3\n\x11withdrawalRequest\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\r\"H\n\x0fwithdrawalReply\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\r\x12\x13\n\x0brecordIndex\x18\x03 \x01(\r\"!\n\x0e\x62\x61lanceRequest\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\"0\n\x0c\x62\x61lanceReply\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\r\"H\n\x0ftransferRequest\x12\x13\n\x0b\x66romAccount\x18\x01 \x01(\t\x12\x11\n\ttoAccount\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\r\"F\n\rtransferReply\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\r\x12\x13\n\x0brecordIndex\x18\x03 \x01(\r\"#\n\x10getRecordRequest\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\"g\n\x0egetRecordReply\x12\x0f\n\x07\x61\x63\x63ount\x18\x01 \x01(\t\x12\x0c\n\x04time\x18\x02 \x01(\t\x12\x11\n\toperation\x18\x03 \x01(\r\x12\x14\n\x0cotherAccount\x18\x04 \x01(\t\x12\r\n\x05value\x18\x05 \x01(\r2\xad\x02\n\x04\x62\x61nk\x12\x35\n\x07\x64\x65posit\x12\x14.bank.depositRequest\x1a\x12.bank.depositReply\"\x00\x12>\n\nwithdrawal\x12\x17.bank.withdrawalRequest\x1a\x15.bank.withdrawalReply\"\x00\x12\x35\n\x07\x62\x61lance\x12\x14.bank.balanceRequest\x1a\x12.bank.balanceReply\"\x00\x12\x38\n\x08transfer\x12\x15.bank.transferRequest\x1a\x13.bank.transferReply\"\x00\x12=\n\tgetRecord\x12\x16.bank.getRecordRequest\x1a\x14.bank.getRecordReply\"\x00\x30\x01\x62\x06proto3')
 )
 
 
@@ -84,6 +84,13 @@ _DEPOSITREPLY = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='recordIndex', full_name='bank.depositReply.recordIndex', index=2,
+      number=3, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -97,7 +104,7 @@ _DEPOSITREPLY = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=70,
-  serialized_end=118,
+  serialized_end=139,
 )
 
 
@@ -134,8 +141,8 @@ _WITHDRAWALREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=120,
-  serialized_end=171,
+  serialized_start=141,
+  serialized_end=192,
 )
 
 
@@ -160,6 +167,13 @@ _WITHDRAWALREPLY = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='recordIndex', full_name='bank.withdrawalReply.recordIndex', index=2,
+      number=3, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -172,8 +186,8 @@ _WITHDRAWALREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=173,
-  serialized_end=224,
+  serialized_start=194,
+  serialized_end=266,
 )
 
 
@@ -203,8 +217,8 @@ _BALANCEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=226,
-  serialized_end=259,
+  serialized_start=268,
+  serialized_end=301,
 )
 
 
@@ -241,8 +255,8 @@ _BALANCEREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=261,
-  serialized_end=309,
+  serialized_start=303,
+  serialized_end=351,
 )
 
 
@@ -286,8 +300,8 @@ _TRANSFERREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=311,
-  serialized_end=383,
+  serialized_start=353,
+  serialized_end=425,
 )
 
 
@@ -312,6 +326,13 @@ _TRANSFERREPLY = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='recordIndex', full_name='bank.transferReply.recordIndex', index=2,
+      number=3, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -324,8 +345,8 @@ _TRANSFERREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=385,
-  serialized_end=434,
+  serialized_start=427,
+  serialized_end=497,
 )
 
 
@@ -355,8 +376,8 @@ _GETRECORDREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=436,
-  serialized_end=471,
+  serialized_start=499,
+  serialized_end=534,
 )
 
 
@@ -414,8 +435,8 @@ _GETRECORDREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=473,
-  serialized_end=576,
+  serialized_start=536,
+  serialized_end=639,
 )
 
 DESCRIPTOR.message_types_by_name['depositRequest'] = _DEPOSITREQUEST
@@ -508,8 +529,8 @@ _BANK = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=579,
-  serialized_end=880,
+  serialized_start=642,
+  serialized_end=943,
   methods=[
   _descriptor.MethodDescriptor(
     name='deposit',

@@ -180,6 +180,7 @@ class bank():
             otherAccount = 0
             recordIndex = self.sql.getRecordIndex() + 1
             self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)
+            return recordIndex
         else:
             _value = result[0][1] + value
             self.sql.updateBalanceWithoutCommit(account, _value)
@@ -187,6 +188,7 @@ class bank():
             otherAccount = 0
             recordIndex = self.sql.getRecordIndex() + 1
             self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)
+            return recordIndex
 
     # 提现
     def withdrawal(self, account, value):
@@ -210,7 +212,7 @@ class bank():
                 otherAccount = 0
                 recordIndex = self.sql.getRecordIndex() + 1
                 self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)
-                return (_value,value)
+                return (recordIndex,_value,value)
             else:
                 return None
 
@@ -239,7 +241,7 @@ class bank():
             otherAccount = toAccount
             recordIndex = self.sql.getRecordIndex() + 1
             self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex)
-            return (_value,value)
+            return (recordIndex,_value,value)
         else:
             return None
 
