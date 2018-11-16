@@ -1,6 +1,5 @@
 import log
-g_log=None
-g_log=log.getLogging()
+g_log=log.getLogging(__name__)
 
 import sqlite3
 import datetime

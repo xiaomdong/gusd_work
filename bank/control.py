@@ -1,9 +1,8 @@
 import log
-g_log=None
-g_log=log.getLogging()
+g_log=log.getLogging(__name__)
 
 import sys
-sys.path.append("/home/test/PycharmProjects/gusd_work/server")
+sys.path.append("../server")
 
 import grpc
 from server import gemini_pb2

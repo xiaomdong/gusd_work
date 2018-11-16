@@ -1,3 +1,6 @@
+import log
+g_log=log.getLogging(__name__)
+
 from concurrent import futures
 import time
 import threading
@@ -23,8 +26,8 @@ class bank_server(bank_pb2_grpc.bankServicer):
         self.threadLock = threading.Lock()
 
     def deposit(self, request, context):
-        # print(request.account)
-        # print(request.value)
+        # g_log.info(request)
+        g_log.info("deposit: "+ request.account + " " + str(request.value))
         self.threadLock.acquire()
         recordIndex_=self.bankSql.deposit(request.account,request.value)
         if(recordIndex_==None):
@@ -37,6 +40,7 @@ class bank_server(bank_pb2_grpc.bankServicer):
         return bank_pb2.depositReply(message='OK',balance=result,recordIndex=recordIndex_)
 
     def withdrawal(self, request, context):
+        g_log.info("withdrawal: " + request.account + " " + str(request.value))
         self.threadLock.acquire()
         result=self.bankSql.withdrawal(request.account,request.value)
         if(result==None):
@@ -50,6 +54,7 @@ class bank_server(bank_pb2_grpc.bankServicer):
         return bank_pb2.withdrawalReply(message='OK',balance=result,recordIndex=recordIndex_)
 
     def balance(self, request, context):
+        g_log.info("balance: " + request.account)
         self.threadLock.acquire()
         result = self.bankSql.getBalance(request.account)
         if(request==None):
@@ -58,6 +63,7 @@ class bank_server(bank_pb2_grpc.bankServicer):
         return bank_pb2.balanceReply(message='OK',balance=result)
 
     def transfer(self, request, context):
+        g_log.info("transfer:" + request.fromAccount + " to " + request.toAccount + str(request.value))
         self.threadLock.acquire()
         result = self.bankSql.transfer(request.fromAccount,request.toAccount,request.value)
         if(result ==None):
@@ -73,6 +79,7 @@ class bank_server(bank_pb2_grpc.bankServicer):
     def getRecord(self, request, context):
         # print("getRecord")
         # print(request)
+        g_log.info("getRecord: " + request.account)
         records = self.bankSql.sql.getRecord(request.account)
         # print(records)
         feature_list = []
@@ -94,9 +101,11 @@ class bank_server(bank_pb2_grpc.bankServicer):
         #     yield i
 
 def run():
+    g_log.info("server start")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     bank_pb2_grpc.add_bankServicer_to_server(bank_server(), server)
     server.add_insecure_port('[::]:50052')
+    g_log.info("server run in [::]:50052")
     server.start()
     try:
         while True:

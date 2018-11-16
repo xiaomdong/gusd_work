@@ -1,6 +1,5 @@
 import log
-g_log=None
-g_log=log.getLogging()
+g_log=log.getLogging(__name__)
 
 import sqlite3
 import datetime
@@ -324,7 +323,7 @@ if __name__ == "__main__":
     #
     # print(operation.deposit)
 
-    bank=Bank()
+    bank=bank()
     bank.run()
 
     bank.deposit("xd1", 100)

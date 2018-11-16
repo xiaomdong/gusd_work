@@ -1,13 +1,12 @@
 import log
-g_log=None
-g_log=log.getLogging()
+g_log=log.getLogging(__name__)
 
 import sys
 from eth_account.messages import defunct_hash_message
 
-sys.path.append("/home/test/PycharmProjects/gusd_work")
-sys.path.append("/home/test/PycharmProjects/gusd_work/bank")
-sys.path.append("/home/test/PycharmProjects/gusd_work/eth")
+sys.path.append(".././gusd_work")
+sys.path.append("../bank")
+sys.path.append("../eth")
 
 from eth.eth_interface import *
 from eth import deploy_dollor
