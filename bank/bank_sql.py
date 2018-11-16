@@ -1,3 +1,7 @@
+import log
+g_log=None
+g_log=log.getLogging()
+
 import sqlite3
 import datetime
 from enum import Enum
@@ -45,18 +49,22 @@ class bankSql():
         if (len(result) == 0):
             self.cursor.execute(SQL_CREATE_BALANCE_TABLE)
             self.conn.commit()
-            print("SQL_CREATE_BALANCE_TABLE ")
+            # print("SQL_CREATE_BALANCE_TABLE ")
+            g_log.info("SQL_CREATE_BALANCE_TABLE ")
         else:
-            print("exist %s table" % (BALANCE_TABLE))
+            # print("exist %s table" % (BALANCE_TABLE))
+            g_log.info("exist %s table" % (BALANCE_TABLE))
 
         self.cursor.execute(SQL_SEARCH_RECORD_TABLE)
         result = self.cursor.fetchall();
         if (len(result) == 0):
             self.cursor.execute(SQL_CREATE_RECORD_TABLE)
             self.conn.commit()
-            print("SQL_CREATE_RECORD_TABLE ")
+            # print("SQL_CREATE_RECORD_TABLE ")
+            g_log.info("SQL_CREATE_RECORD_TABLE ")
         else:
-            print("exist %s table" % (RECORD_TABLE))
+            # print("exist %s table" % (RECORD_TABLE))
+            g_log.info("exist %s table" % (RECORD_TABLE))
 
 
     def runSqlwithCommit(self, sql, data):
@@ -66,7 +74,8 @@ class bankSql():
             return []   #表示执行正常
         except Exception as e:
             self.conn.rollback() # 回滚？
-            print("something err:%s" % (e))
+            # print("something err:%s" % (e))
+            g_log.error("something err:%s" % (e))
             return None #表示执行异常
 
     def runSqlWithoutCommit(self, sql, data):
@@ -76,7 +85,8 @@ class bankSql():
             return []     #表示执行正常
         except Exception as e:
             self.conn.rollback()  # 回滚？
-            print("something err:%s" % (e))
+            # print("something err:%s" % (e))
+            g_log.error("something err:%s" % (e))
             return None   #表示执行异常
 
     def runSql(self, sql, data):
@@ -88,7 +98,8 @@ class bankSql():
             return result #表格中有数据
         except Exception as e:
             self.conn.rollback()  # 回滚？
-            print("something err:%s" % (e))
+            # print("something err:%s" % (e))
+            g_log.error("something err:%s" % (e))
             return None   #表示执行异常
 
     def runSqlWithoutData(self, sql):
@@ -100,7 +111,8 @@ class bankSql():
             return result #表格中有数据
         except Exception as e:
             self.conn.rollback()  # 回滚？
-            print("something err:%s" % (e))
+            # print("something err:%s" % (e))
+            g_log.error("something err:%s" % (e))
             return None   #表示执行异常
 
     def insertBalanceWithoutCommit(self, account, value):
@@ -182,7 +194,7 @@ class bank():
                 # sql 操作失败，这里暂时都不处理
                 return None
             operation = CREATE_OPERATION
-            otherAccount = 0
+            otherAccount = "0"
             recordIndex = self.sql.getRecordIndex() + 1
             if(recordIndex==None):
                 return None
@@ -194,11 +206,13 @@ class bank():
             if(self.sql.updateBalanceWithoutCommit(account, _value)==None):
                 # sql 操作失败，这里暂时都不处理
                 return None
+
             operation = DEPOSIT_OPERATION
-            otherAccount = 0
+            otherAccount = "0"
             recordIndex = self.sql.getRecordIndex() + 1
             if(recordIndex==None):
                 return None
+
             if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex) == None):
                 # sql 操作失败，这里暂时都不处理
                 return None
@@ -224,7 +238,7 @@ class bank():
                 if(self.sql.updateBalanceWithoutCommit(account, _value)==None):
                     return None
                 operation = WITHDRAWAL_OPERATION
-                otherAccount = 0
+                otherAccount = "0"
                 recordIndex = self.sql.getRecordIndex() + 1
                 if (recordIndex == None):
                     return None

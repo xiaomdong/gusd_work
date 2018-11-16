@@ -1,3 +1,7 @@
+import log
+g_log=None
+g_log=log.getLogging()
+
 import sqlite3
 import datetime
 from enum import Enum
@@ -63,18 +67,18 @@ class geminiSql():
         if (len(result) == 0):
             self.cursor.execute(SQL_CREATE_USER_TABLE)
             self.conn.commit()
-            print("SQL_CREATE_BALANCE_TABLE ")
+            g_log.info("SQL_CREATE_BALANCE_TABLE ")
         else:
-            print("exist %s table" % (USER_TABLE))
+            g_log.info("exist %s table" % (USER_TABLE))
 
         self.cursor.execute(SQL_SEARCH_RECORD_TABLE)
         result = self.cursor.fetchall();
         if (len(result) == 0):
             self.cursor.execute(SQL_CREATE_RECORD_TABLE)
             self.conn.commit()
-            print("SQL_CREATE_RECORD_TABLE ")
+            g_log.info("SQL_CREATE_RECORD_TABLE ")
         else:
-            print("exist %s table" % (RECORD_TABLE))
+            g_log.info("exist %s table" % (RECORD_TABLE))
 
     def runSqlwithCommit(self, sql, data):
         try:
@@ -83,7 +87,7 @@ class geminiSql():
             return []   #表示执行正常
         except Exception as e:
             self.conn.rollback() # 回滚？
-            print("something err:%s" % (e))
+            g_log.error("something err:%s" % (e))
             return None #表示执行异常
 
     def runSqlWithoutCommit(self, sql, data):
@@ -93,7 +97,7 @@ class geminiSql():
             return []     #表示执行正常
         except Exception as e:
             self.conn.rollback()  # 回滚？
-            print("something err:%s" % (e))
+            g_log.error("something err:%s" % (e))
             return None   #表示执行异常
 
     def runSql(self, sql, data):
@@ -105,7 +109,7 @@ class geminiSql():
             return result #表格中有数据
         except Exception as e:
             self.conn.rollback()  # 回滚？
-            print("something err:%s" % (e))
+            g_log.error("something err:%s" % (e))
             return None   #表示执行异常
 
     def runSqlWithoutData(self, sql):
@@ -117,7 +121,7 @@ class geminiSql():
             return result #表格中有数据
         except Exception as e:
             self.conn.rollback()  # 回滚？
-            print("something err:%s" % (e))
+            g_log.error("something err:%s" % (e))
             return None   #表示执行异常
 
     def getUser(self, account):
