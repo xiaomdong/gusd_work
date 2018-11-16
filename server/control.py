@@ -4,9 +4,9 @@ g_log=log.getLogging(__name__)
 import sys
 from eth_account.messages import defunct_hash_message
 
-sys.path.append(".././gusd_work")
-sys.path.append("../bank")
-sys.path.append("../eth")
+sys.path.append("../../gusd_work")
+sys.path.append("../../gusd_work/bank")
+sys.path.append("../../gusd_work/eth")
 
 from eth.eth_interface import *
 from eth import deploy_dollor
@@ -123,6 +123,14 @@ def create_eth_addr():
     try:
         address=web3.personal.newAccount(ACCOUNT_ETH_PASSWORD)
         g_log.info(address)
+        g_log.info(type(address))
+
+        #为了测试方便，向每个帐号上转10个eth，用于支付gas
+        web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
+        txhash=web3.eth.sendTransaction(
+            {'to': address, 'from': SWEEPER_ETH_ACCOUNT, 'value': web3.toWei(10,"ether")})
+
+        web3.eth.waitForTransactionReceipt(txhash)
         return address
     except Exception as e:
         g_log.error("something err:%s" % (e))
@@ -181,6 +189,20 @@ def transfer(fromaddr,toaddr,value):
         g_log.info(fromaddr + " send " + str(value) + " GUSD to " + toaddr)
         g_log.error("something err:%s" % (e))
         return None
+
+# # 测试接口，转账gusd
+# def transfer(fromaddr,password, toaddr,value):
+#     web3 = g_web3
+#     try:
+#         web3.personal.unlockAccount(fromaddr, password)
+#         txhash =ERC20ProxyContract.functions.transfer(toaddr,value).transact({'from': fromaddr})
+#         web3.eth.waitForTransactionReceipt(txhash)
+#         g_log.info(fromaddr + " send " + str(value) + " GUSD to " + toaddr)
+#         return txhash
+#     except Exception as e:
+#         g_log.info(fromaddr + " send " + str(value) + " GUSD to " + toaddr)
+#         g_log.error("something err:%s" % (e))
+#         return None
 
 #获取银行账户余额
 def bankBlance(account_):
@@ -313,17 +335,20 @@ def get_gusd_print():
 def gusd_burn(money):
     web3 = g_web3
 
-    balance=bankBlance(REGULATORY_BANK_ACCOUNT)
-    if(balance==None):
+    balance = bankBlance(REGULATORY_BANK_ACCOUNT)
+    if(balance == None):
         return None
 
-    if(balance<= money):
+    if(balance <= money):
         g_log.error("Insufficient account balance!!!: "+str(balance)+" < "+str(money))
         return None
 
     result=bankTransfer(REGULATORY_BANK_ACCOUNT,COLLECTIVE_BANK_ACCOUNT,money)
-    if(result ==None):
+    if(result == None):
         return None
+
+    if(withdrawalUSD2CollectionRecordfun != None):
+        withdrawalUSD2CollectionRecordfun(money, result.recordIndex)
     try:
         web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
         txhash = ERC20ImplContract.functions.burn(money).transact({'from': SWEEPER_ETH_ACCOUNT})
@@ -546,97 +571,100 @@ if __name__ == '__main__':
 
     gusd_init()
 
-    gusd_init_print(100000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    bankBlance(COLLECTIVE_BANK_ACCOUNT)
-    get_gusd_print()
+    create_eth_addr()
 
+    # gusd_init_print(100000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # bankBlance(COLLECTIVE_BANK_ACCOUNT)
+    # getGUSDBalance(SWEEPER_ETH_ACCOUNT)
+    # get_gusd_print()
 
-    gusd_print(10000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_print(100)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_print(1000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_print(55555)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-
-    gusd_print(555555)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-
-    gusd_burn(55555)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_burn(1000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_burn(100)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_burn(10000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    bankBlance(COLLECTIVE_BANK_ACCOUNT)
-    get_gusd_print()
-
-
-    # eventFilterDic["PrintingLocked"] = ERC20ImplContract.events.PrintingLocked.createFilter(fromBlock='latest')
-    # eventFilterDic["PrintingConfirmed"] = ERC20ImplContract.events.PrintingConfirmed.createFilter(fromBlock='latest')
-    # eventFilterDic["Transfer"] = ERC20ProxyContract.events.Transfer.createFilter(fromBlock='latest')
     #
-    # eventThread = threading.Thread(target=event_loop, args=(eventFilterDic, 5), daemon=True)
-    # eventThread.start()
-    event_thread_run()
-
-    # print("==========================================")
-    # print(getGUSDBalance('0xD34eEAea22537317145d9A29352Db6c1cfa8493f'))
-    # print("==========================================")
+    # gusd_print(10000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_print(100)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_print(1000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_print(55555)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
     #
-    # print("==========================================")
-    # print(create_eth_addr())
-    # print("==========================================")
-
-
-    gusd_init_print(1000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    bankBlance(COLLECTIVE_BANK_ACCOUNT)
-    get_gusd_print()
-
-    gusd_print(10000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_print(100)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_print(1000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_print(55555)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-
-    gusd_print(555555)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-
-    gusd_burn(55555)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_burn(1000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_burn(100)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    get_gusd_print()
-    gusd_burn(10000)
-    bankBlance(REGULATORY_BANK_ACCOUNT)
-    bankBlance(COLLECTIVE_BANK_ACCOUNT)
-    get_gusd_print()
-
-
-    while (1):
-        time.sleep(10)
+    # gusd_print(555555)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    #
+    # gusd_burn(55555)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_burn(1000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_burn(100)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_burn(10000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # bankBlance(COLLECTIVE_BANK_ACCOUNT)
+    # get_gusd_print()
+    #
+    #
+    # # eventFilterDic["PrintingLocked"] = ERC20ImplContract.events.PrintingLocked.createFilter(fromBlock='latest')
+    # # eventFilterDic["PrintingConfirmed"] = ERC20ImplContract.events.PrintingConfirmed.createFilter(fromBlock='latest')
+    # # eventFilterDic["Transfer"] = ERC20ProxyContract.events.Transfer.createFilter(fromBlock='latest')
+    # #
+    # # eventThread = threading.Thread(target=event_loop, args=(eventFilterDic, 5), daemon=True)
+    # # eventThread.start()
+    # event_thread_run()
+    #
+    # # print("==========================================")
+    # # print(getGUSDBalance('0xD34eEAea22537317145d9A29352Db6c1cfa8493f'))
+    # # print("==========================================")
+    # #
+    # # print("==========================================")
+    # # print(create_eth_addr())
+    # # print("==========================================")
+    #
+    #
+    # gusd_init_print(1000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # bankBlance(COLLECTIVE_BANK_ACCOUNT)
+    # get_gusd_print()
+    #
+    # gusd_print(10000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_print(100)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_print(1000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_print(55555)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    #
+    # gusd_print(555555)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    #
+    # gusd_burn(55555)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_burn(1000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_burn(100)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # get_gusd_print()
+    # gusd_burn(10000)
+    # bankBlance(REGULATORY_BANK_ACCOUNT)
+    # bankBlance(COLLECTIVE_BANK_ACCOUNT)
+    # get_gusd_print()
+    #
+    #
+    # while (1):
+    #     time.sleep(10)

@@ -1,4 +1,6 @@
 # python -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. ./gemini.proto
+import log
+g_log=log.getLogging(__name__)
 
 import datetime
 from concurrent import futures
@@ -6,8 +8,8 @@ import time
 import threading
 import grpc
 
-import sys
-sys.path.append("/home/test/PycharmProjects/gusd_work/server")
+# import sys
+# sys.path.append("/home/test/PycharmProjects/gusd_work/server")
 
 import gemini_pb2
 import gemini_pb2_grpc
@@ -23,6 +25,11 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
         self.gemini_sql=gemini_sql.gemini()
         self.gemini_sql.run()
         control.gusd_init()
+        control.setEventRecordFun(self.gemini_sql.burnGUSD,
+                                  self.gemini_sql.printGUSD,
+                                  self.gemini_sql.depositUSD2Regulatory,
+                                  self.gemini_sql.withdrawalUSD2Collection)
+        control.event_thread_run()
         self.threadLock = threading.Lock()
 
     # 用户登录
@@ -40,13 +47,22 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
 
     # 用户注册
     def register(self, request, context):
+        g_log.info("register user be called")
         self.threadLock.acquire()
-        DepositEthaddress=control.create_eth_addr()
-        if(DepositEthaddress==None):
-            self.threadLock.release()
-            return gemini_pb2.registerReply(message='WEB3 CREATE ETH ADDRESS ERR')
+        user = self.gemini_sql.sql.getUser(request.account)
+        if (user == None):
+            return gemini_pb2.registerReply(message='SQL RUN ERR')
 
-        result=self.gemini_sql.addUser(self,
+        DepositEthaddress=[]
+        if(user == []):
+            DepositEthaddress=control.create_eth_addr()
+            if(DepositEthaddress==None):
+                self.threadLock.release()
+                return gemini_pb2.registerReply(message='WEB3 CREATE ETH ADDRESS ERR')
+        else:
+            DepositEthaddress=user[0][6]
+
+        result=self.gemini_sql.addUser(
                                 request.account,
                                 request.password,
                                 request.mail,
@@ -73,16 +89,18 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             self.threadLock.release()
             return gemini_pb2.balanceReply(message='SQL GET USER ERR', usd=0, gusd=0)
 
-        usdValue=user[7]
-        DepositEthaddress=user[6]
+        usdValue=user[0][7]
+        DepositEthaddress=user[0][6]
         gusdValue=control.getGUSDBalance(DepositEthaddress)
         self.threadLock.release()
 
-        if(gusdValue ==None):
+        if(gusdValue == None):
             return gemini_pb2.balanceReply(message='WEB3 GET USER GUSD BALANCE ERR', usd=0, gusd=0)
 
-        if (balance[0] != usdValue):
-            return gemini_pb2.balanceReply(message='ERR', usd=0, gusd=0)
+        print(balance[0])
+        print(usdValue)
+        if (balance[0][0] != usdValue):
+            return gemini_pb2.balanceReply(message='USD BALANCE ERR', usd=0, gusd=0)
 
         # balance[1]暂时不用
         # if (balance[1] != gusdValue):
@@ -107,7 +125,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
                                         depositBankAccount='None',
                                         withdrawBankAccount='None',
                                         withdrawEthaddress='None')
-        DepositEthaddress=user[6]
+        DepositEthaddress=user[0][6]
         gusdValue=control.getGUSDBalance(DepositEthaddress)
         self.threadLock.release()
 
@@ -152,7 +170,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             self.threadLock.release()
             return gemini_pb2.exchangeGUSDReply(message='WEB3 GET USER GUSD BALANCE ERR', usd=0, gusd=0)
 
-        if(request.usd > balance[0] ): #如果余额小于兑换数目
+        if(request.usd > balance[0][0] ): #如果余额小于兑换数目
             self.threadLock.release()
             return gemini_pb2.exchangeGUSDReply(message='INSUFFICIENT USD BALANCE', usd=0, gusd=0)
 
@@ -160,7 +178,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
         if (user == None or user == []):
             self.threadLock.release()
             return gemini_pb2.exchangeGUSDReply(message='SQL GET USER ERR', usd=0, gusd=0)
-        DepositEthaddress = user[6]
+        DepositEthaddress = user[0][6]
 
 
         # 获取sweeper地址的GUSD余额
@@ -190,7 +208,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             self.threadLock.release()
             return gemini_pb2.exchangeGUSDReply(message='SQL EXCHANGE GUSD ERR', usd=0, gusd=0)
 
-        usdValue = balance[0]
+        usdValue = balance[0][0]
         gusdValue = control.getGUSDBalance(DepositEthaddress)
         self.threadLock.release()
         if (gusdValue == None):
@@ -210,7 +228,8 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             self.threadLock.release()
             return gemini_pb2.exchangeUSDReply(message='SQL GET USER ERR', usd=0, gusd=0)
 
-        DepositEthaddress = user[6]
+        DepositEthaddress = user[0][6]
+        print(DepositEthaddress)
         gusdValue = control.getGUSDBalance(DepositEthaddress)
         if(request.gusd > gusdValue ):#如果余额小于兑换数目
             self.threadLock.release()
@@ -227,7 +246,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             self.threadLock.release()
             return gemini_pb2.exchangeUSDReply(message='SQL EXCHANGE USD ERR', usd=0, gusd=0)
 
-        usdValue = balance[0]
+        usdValue = balance[0][0]
         gusdValue = control.getGUSDBalance(DepositEthaddress)
         self.threadLock.release()
 
@@ -250,39 +269,43 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
         if (user == None or user == []):
             self.threadLock.release()
             return gemini_pb2.withdrawalUSDReply(message='SQL GET USER ERR', usd=0, gusd=0)
-        DepositEthaddress = user[6]
+        DepositEthaddress = user[0][6]
 
         #获取USD余额
         balance = self.gemini_sql.getBalance(request.account)
+        self.threadLock.release()
+
         if(balance == None or balance==[] ):
-            self.threadLock.release()
             return gemini_pb2.withdrawalUSDReply(message='SQL GET BALANCE ERR', usd=0, gusd=0)
 
-        if(request.usd > balance[0]):
-            self.threadLock.release()
+
+        if(request.usd > balance[0][0]):
             return gemini_pb2.withdrawalUSDReply(message='INSUFFICIENT USD BALANCE', usd=balance[0], gusd=0)
 
-        geminiCollectiveBalance=control.bankBlance(control.COLLECTIVE_BANK_ACCOUNT)
-        if(geminiCollectiveBalance ==None):
-            self.threadLock.release()
+
+        geminiCollectiveBalance = control.bankBlance(control.COLLECTIVE_BANK_ACCOUNT)
+        print(geminiCollectiveBalance)
+
+        if(geminiCollectiveBalance == None ):
             return gemini_pb2.withdrawalUSDReply(message='SQL GET COLLECTIVE BALANCE ERR', usd=0, gusd=0)
 
-        if(balance>geminiCollectiveBalance):
+
+        if(balance[0][0] > geminiCollectiveBalance):
             if(control.bankTransfer(control.REGULATORY_BANK_ACCOUNT,control.COLLECTIVE_BANK_ACCOUNT,request.usd)==None):
-                self.threadLock.release()
                 return gemini_pb2.withdrawalUSDReply(message='SQL TRANSFER REGULATORY TO COLLECTIVE ERR', usd=0, gusd=0)
 
+            self.threadLock.acquire()
             if(control.gusd_burn(request.usd)==None):
                 self.threadLock.release()
                 return gemini_pb2.withdrawalUSDReply(message='WEB3 BURN GUSD ERR', usd=0, gusd=0)
+            self.threadLock.release()
 
         reponse = control.bankTransfer(control.COLLECTIVE_BANK_ACCOUNT, request.withdrawBankAccount, request.usd)
         if(reponse == None):
-            self.threadLock.release()
             return gemini_pb2.withdrawalUSDReply(message='SQL TRANSFER COLLECTIVE TO USER ERR', usd=0, gusd=0)
 
+        self.threadLock.acquire()
         result=self.gemini_sql.withdrawalUSD(request.account,request.usd,reponse.recordIndex)
-        self.threadLock.release()
         if(result==None):
             self.threadLock.release()
             return gemini_pb2.withdrawalUSDReply(message='SQL WITHDRAWAL USD ERR', usd=0, gusd=0)
@@ -292,7 +315,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             self.threadLock.release()
             return gemini_pb2.withdrawalUSDReply(message='SQL GET BALANCE ERR', usd=0, gusd=0)
 
-        usdValue = balance[0]
+        usdValue = balance[0][0]
         gusdValue = control.getGUSDBalance(DepositEthaddress)
         self.threadLock.release()
 
@@ -310,7 +333,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             self.threadLock.release()
             return gemini_pb2.withdrawalGUSDReply(message='SQL GET USER ERR', usd=0, gusd=0)
 
-        DepositEthaddress = user[6]
+        DepositEthaddress = user[0][6]
         gusdValue = control.getGUSDBalance(DepositEthaddress)
         if(gusdValue == None):
             self.threadLock.release()
@@ -320,7 +343,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             self.threadLock.release()
             return gemini_pb2.withdrawalGUSDReply(message='INSUFFICIENT GUSD BALANCE', usd=0, gusd=0)
 
-        txhash = control.transfer(DepositEthaddress, request.withdrawEthaddress, gusdValue)
+        txhash = control.transfer(DepositEthaddress, request.withdrawEthaddress, request.gusd)
         if(txhash == None):
             self.threadLock.release()
             return gemini_pb2.withdrawalGUSDReply(message='WEB3 TRANSFER GUSD ERR', usd=0, gusd=0)
@@ -330,11 +353,12 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
             return gemini_pb2.withdrawalGUSDReply(message='SQL WITHDRAWAL GUSD ERR', usd=0, gusd=0)
 
         balance = self.gemini_sql.getBalance(request.account)
+        print(balance)
         if(balance == None or balance == [] ):
             self.threadLock.release()
             return gemini_pb2.withdrawalGUSDReply(message='SQL GET BALANCE ERR', usd=0, gusd=0)
 
-        usdValue = balance[0]
+        usdValue = balance[0][0]
         gusdValue = control.getGUSDBalance(DepositEthaddress)
         self.threadLock.release()
 
@@ -363,20 +387,28 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
         print(request)
         self.threadLock.acquire()
 
+        user = self.gemini_sql.sql.getUserByBankAccount(request.account)
+        if (user == None or user == []):
+            self.threadLock.release()
+            return gemini_pb2.withdrawalGUSDReply(message='SQL GET USER ERR')
+
+        account=user[0][0]
+
         if(request.otherAccount == control.COLLECTIVE_BANK_ACCOUNT and request.operation == bank_sql.TRANSER_OPERATION):
-            balance = self.gemini_sql.getBalance(request.account)
+            balance = self.gemini_sql.getBalance(account)
+            print(balance)
             if (balance == None or balance == []):
                 self.threadLock.release()
                 return gemini_pb2.bankInfoReply(message='SQL GET BALANCE ERR')
 
-            usdValue = balance[0] + request.value
-            result=self.gemini_sql.depositUSD(request.account,request.value,request.recordIndex)
+            usdValue = balance[0][0] + request.value
+            result=self.gemini_sql.depositUSD(account,request.value,request.recordIndex)
             if(result == None):
                 self.threadLock.release()
                 return gemini_pb2.bankInfoReply(message='SQL DEPOSIT USD ERR')
 
             time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            operation = self.gemini_sql.DEPOSIT_USD_OPERATION
+            operation = gemini_sql.DEPOSIT_USD_OPERATION
             otherAccount = control.COLLECTIVE_BANK_ACCOUNT
             value = usdValue
             recordIndex = self.gemini_sql.sql.getRecordIndex() + 1
@@ -385,7 +417,7 @@ class gemini_server(gemini_pb2_grpc.geminiServicer):
                 return gemini_pb2.bankInfoReply(message='SQL GET RECORDINDEX ERR')
 
             addedinfo = request.recordIndex #附加信息用于记录银行交易的记录号
-            if(self.gemini_sql.insertRecord(request.account, time, operation, otherAccount, value, recordIndex, addedinfo)==None):
+            if(self.gemini_sql.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo)==None):
                 self.threadLock.release()
                 return gemini_pb2.bankInfoReply(message='SQL INSERT RECORD ERR')
 

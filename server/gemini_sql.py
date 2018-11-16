@@ -22,6 +22,8 @@ SQL_CREATE_RECORD_TABLE = "create table %s (account text, time  text, operation 
 SQL_INSERT_USER_TABLE = "insert into %s values (?,?,?,?,?,?,?,?,?)" % (USER_TABLE)
 SQL_UPDATE_USER_TABLE = "update %s set password=?,mail=?,phone=?,withdrawBankAccount=?,withdrawEthaddress=?,DepositEthaddress=? where account=?" % (USER_TABLE)
 SQL_SELECT_USER_TABLE = "select * from %s where account=?" % (USER_TABLE)
+SQL_SELECT_USER_BY_BANKACCOUNT_TABLE = "select * from %s where withdrawBankAccount=?" % (USER_TABLE)
+
 SQL_UPDATE_GUSD_USER_TABLE = "update %s set gusd=? where account=?" % (USER_TABLE)
 SQL_UPDATE_USD_USER_TABLE = "update %s set usd=? where account=?" % (USER_TABLE)
 SQL_GETBALANCE_USER_TABLE = "select usd,gusd from %s where account=?" % (USER_TABLE)
@@ -127,6 +129,10 @@ class geminiSql():
         tmp = (account,)
         return self.runSql(SQL_SELECT_USER_TABLE, tmp)
 
+    def getUserByBankAccount(self, bankAccount):
+        tmp = (bankAccount,)
+        return self.runSql(SQL_SELECT_USER_BY_BANKACCOUNT_TABLE, tmp)
+
     def insertUserWithoutCommit(self, account, password, mail, phone, withdrawBankAccount, withdrawEthaddress, DepositEthaddress, USD=0, GUSD=0):
         tmp = (account, password, mail, phone, withdrawBankAccount, withdrawEthaddress, DepositEthaddress, USD, GUSD)
         return self.runSqlWithoutCommit(SQL_INSERT_USER_TABLE, tmp)
@@ -209,42 +215,65 @@ class gemini():
             # sql 操作失败，这里暂时都不处理
             return None
         if (result == []):
-            return [0,0]
+            return [(0,0)]
         else:
             return result
 
     # 创建用户和更新用户
     # addedinfo，信息为""
     def addUser(self, account, password, mail, phone, withdrawBankAccount, withdrawEthaddress, DepositEthaddress, addedinfo=""):
+        g_log.info("account:"+account)
+        g_log.info("password:"+password)
+        g_log.info("mail:"+mail)
+        g_log.info("phone:"+phone)
+        g_log.info("withdrawBankAccount:"+withdrawBankAccount)
+        g_log.info("withdrawEthaddress:"+withdrawEthaddress)
+        g_log.info("DepositEthaddress:"+DepositEthaddress)
+
+
         time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         result = self.sql.getUser(account)
         if(result == None):
+            g_log.error("SQL GET USER RUN ERR")
             # sql执行失败
             return None
 
         if(result == []):
+            g_log.info("user is not exised, create a new")
             if(self.sql.insertUserWithoutCommit(account, password, mail, phone, withdrawBankAccount, withdrawEthaddress, DepositEthaddress,0,0) == None):
                 #sql 操作失败，这里暂时都不处理
+                g_log.error("SQL INSER USER ERR")
                 return None
+
             operation=CREATE_USER_OPERATION
             otherAccount = account + "," + password + "," + mail + "," + phone + "," + withdrawBankAccount + "," + withdrawEthaddress + "," + DepositEthaddress + ","
             recordIndex = self.sql.getRecordIndex() + 1
             if(recordIndex==None):
+                g_log.error("SQL GET RECORDINDEX ERR")
                 return None
             if (self.sql.insertRecord(account, time, operation, otherAccount, 0, recordIndex , addedinfo) == None):
                 # sql 操作失败，这里暂时都不处理
+                g_log.error("SQL INSERT RECORD ERR")
                 return None
+
+
         else:
+            g_log.info("user is exised, update info")
             if(self.sql.updateUserWithoutCommit(account, password, mail, phone, withdrawBankAccount, withdrawEthaddress, DepositEthaddress) == None):
                 # sql 操作失败，这里暂时都不处理
+                g_log.error("SQL UPDATE USER ERR")
                 return None
+
             operation=UPDATE_USER_OPERATION
             otherAccount = account + "," + password + "," + mail + "," + phone + "," + withdrawBankAccount + "," + withdrawEthaddress + "," + DepositEthaddress + ","
             recordIndex = self.sql.getRecordIndex() + 1
             if(recordIndex==None):
+                g_log.error("SQL GET RECORDINDEX ERR")
                 return None
+
             if (self.sql.insertRecord(account, time, operation, otherAccount, 0, recordIndex, addedinfo) == None):
                 # sql 操作失败，这里暂时都不处理
+                g_log.error("SQL INSERT RECORD ERR")
                 return None
         return "OK"
 
@@ -275,7 +304,7 @@ class gemini():
             if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                 # sql 操作失败，这里暂时都不处理
                 return None
-            return  (_value,value) #返回存款的USD余额，和存款的数目
+            return  [(_value,value)] #返回存款的USD余额，和存款的数目
 
     # 提现USD,此函数调用后，接着调用归集账户向客户的提现账户转账
     # addedinfo 记录归集账户向客户转账的银行交易记录recordIndex
@@ -305,7 +334,7 @@ class gemini():
                 if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                     # sql 操作失败，这里暂时都不处理
                     return None
-                return (_value,value) #返回提现后的USD余额，和提现的数目
+                return [(_value,value)] #返回提现后的USD余额，和提现的数目
             else:
                 return None
 
@@ -339,7 +368,7 @@ class gemini():
                 if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                     # sql 操作失败，这里暂时都不处理
                     return None
-                return (_value,value) #返回兑换后的USD余额，和兑换的数目
+                return [(_value,value)] #返回兑换后的USD余额，和兑换的数目
             else:
                 return None
 
@@ -371,7 +400,7 @@ class gemini():
                 # sql 操作失败，这里暂时都不处理
                 return None
 
-            return (_value, value)  # 返回存款的GUSD余额，和存款的数目
+            return [(_value, value)]  # 返回存款的GUSD余额，和存款的数目
 
 
     # 提现GUSD,通过web3模块调用gusd转账，从SWEEPER地址向客户提现的GUSD地址转账
@@ -406,7 +435,7 @@ class gemini():
                 if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                     # sql 操作失败，这里暂时都不处理
                     return None
-                return (_value,value)
+                return [(_value,value)]
             else:
                 return None
 
@@ -444,7 +473,7 @@ class gemini():
                 if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
                     # sql 操作失败，这里暂时都不处理
                     return None
-                return (_value,value) #返回兑换后的USD余额，和兑换的数目
+                return [(_value,value)] #返回兑换后的USD余额，和兑换的数目
             else:
                 return None
 
