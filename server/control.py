@@ -510,19 +510,20 @@ def handle_event(event):
                 event['args']['_value']))
 
     if (event['event'] == "Transfer"):
-        # print(event)
+        # print(web3.toHex(event['transactionHash']))
+        # print(type(web3.toHex(event['transactionHash'])))
         print(event['event'] + ":" + event['args']['_from'] + "," + event['args']['_to'] + "," + str(
             event['args']['_value']))
 
         if (event['args']['_to'] == '0x0000000000000000000000000000000000000000'):
             print("burn operation")
             if(burnGUSDRecordfun!=None):
-                burnGUSDRecordfun(event['args']['_value'],"")
+                burnGUSDRecordfun(event['args']['_value'],web3.toHex(event['transactionHash']))
 
         if (event['args']['_from'] == '0x0000000000000000000000000000000000000000'):
             print("print operation")
             if(printGUSDRecordfun!=None):
-                printGUSDRecordfun(event['args']['_value'],"")
+                printGUSDRecordfun(event['args']['_value'],web3.toHex(event['transactionHash']))
         print("-----------------------------")
 
 #event 循环接收
@@ -550,6 +551,7 @@ if __name__ == '__main__':
     bankBlance(REGULATORY_BANK_ACCOUNT)
     bankBlance(COLLECTIVE_BANK_ACCOUNT)
     get_gusd_print()
+
 
     gusd_print(10000)
     bankBlance(REGULATORY_BANK_ACCOUNT)
@@ -600,7 +602,7 @@ if __name__ == '__main__':
     # print("==========================================")
 
 
-    # gusd_init_print(1000)
+    gusd_init_print(1000)
     bankBlance(REGULATORY_BANK_ACCOUNT)
     bankBlance(COLLECTIVE_BANK_ACCOUNT)
     get_gusd_print()
