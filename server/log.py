@@ -6,7 +6,7 @@ def getLogging(logger=None):
         logger_.setLevel(logging.DEBUG)
         fh = logging.FileHandler("./log.log")
         ch = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s %(filename)-15s %(funcName)-15s [line:%(lineno)5d] %(message)s')
+        formatter = logging.Formatter('%(asctime)s %(filename)-18s %(funcName)-18s [line:%(lineno)5d] %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
         logger_.addHandler(fh)

@@ -162,6 +162,94 @@ from bank import bank_pb2_grpc
 from bank import bank_pb2
 
 
+# 测试注册用户
+# 创建银行账户bank_yl001，并存入10000 USD
+# 对应创建genemi_yl001用户
+def testAddUser1():
+    with grpc.insecure_channel('172.16.1.176:50052') as channel:
+        stub = bank_pb2_grpc.bankStub(channel)
+
+        # 创建bank_yl001 银行用户，存款10000
+        response = stub.deposit(bank_pb2.depositRequest(account='bank_yl001', value=10000))
+        print("depositRequest    : account='bank_yl001',value=10000")
+        print("received          : " + response.message + ", " + str(response.balance) + ", " + str(
+            response.recordIndex));
+        print("-------------------------------------------")
+
+    # 对应创建genemi_yl001 genemi系统用户
+    # 钱包上的地址是 account20
+    with grpc.insecure_channel('172.16.1.175:50053') as channel:
+        stub = gemini_pb2_grpc.geminiStub(channel)
+
+        response = stub.register(gemini_pb2.registerRequest(account='genemi_yl001',
+                                                            password='123456',
+                                                            mail="yl002@gmail.com",
+                                                            phone="00000000001",
+                                                            withdrawBankAccount="bank_yl001",
+
+                                                            withdrawEthaddress="0xB0B5Cc397ED952587a4B1A17AFDdF01F99DA4531"))
+
+# 测试注册用户
+# 创建银行账户bank_yl002，并存入10000 USD
+# 对应创建genemi_yl002用户
+def testAddUser2():
+    # 测试注册用户
+    #创建bank_yl002用户，并存入10000
+    with grpc.insecure_channel('172.16.1.176:50052') as channel:
+        stub = bank_pb2_grpc.bankStub(channel)
+
+        #创建bank_yl002 银行用户，存款10000
+        response = stub.deposit(bank_pb2.depositRequest(account='bank_yl002',value=10000))
+        print("depositRequest    : account='bank_yl002',value=10000")
+        print("received          : " + response.message + ", " +str(response.balance) +", "+str(response.recordIndex));
+        print("-------------------------------------------")
+
+
+    # 对应创建genemi_yl002 genemi系统用户
+    # 钱包上的地址是 account21
+    with grpc.insecure_channel('172.16.1.175:50053') as channel:
+        stub = gemini_pb2_grpc.geminiStub(channel)
+        response = stub.register(gemini_pb2.registerRequest(account='genemi_yl002',
+                                                            password='123456',
+                                                            mail="yl002@gmail.com",
+                                                            phone="00000000002",
+                                                            withdrawBankAccount="bank_yl002",
+                                                            withdrawEthaddress="0x16DBc3D1e32002abf22E75a2131c8f64aD67d99a"))
+
+#测试向genemi系统Deposit usd
+#bank_yl001银行用户向genemi归集账户转账1000 usd
+def testDepositUSD():
+    with grpc.insecure_channel('172.16.1.176:50052') as channel:
+        stub = bank_pb2_grpc.bankStub(channel)
+
+        #查询bank_yl001银行账户balance
+        response = stub.balance(bank_pb2.balanceRequest(account="bank_yl001"))
+        print("balanceRequest    : account=bank_yl001")
+        print("received          : " + response.message + ", " +str(response.balance));
+
+        #查询COLLECTIVE_BANK_ACCOUNT银行账户balance
+        response = stub.balance(bank_pb2.balanceRequest(account=control.COLLECTIVE_BANK_ACCOUNT))
+        print("balanceRequest    : account=control.COLLECTIVE_BANK_ACCOUNT")
+        print("received          : " + response.message + ", " +str(response.balance));
+
+        #测试USD存款
+        #bank_yl001银行用户向genemi归集账户转账1000
+        response = stub.transfer(bank_pb2.transferRequest(fromAccount='bank_yl001',toAccount=control.COLLECTIVE_BANK_ACCOUNT,value=1000))
+        print("transferRequest   : fromAccount='bank_yl001',toAccount='control.COLLECTIVE_BANK_ACCOUNT',value=100")
+        print("received          : " + response.message + ", " +str(response.balance) +", "+str(response.recordIndex));
+
+        # 查询bank_yl001银行账户balance
+        response = stub.balance(bank_pb2.balanceRequest(account=control.COLLECTIVE_BANK_ACCOUNT))
+        print("balanceRequest    : account=control.COLLECTIVE_BANK_ACCOUNT")
+        print("received          : " + response.message + ", " +str(response.balance));
+
+        #查询COLLECTIVE_BANK_ACCOUNT银行账户balance
+        response = stub.balance(bank_pb2.balanceRequest(account="bank_yl001"))
+        print("balanceRequest    : account=bank_yl001")
+        print("received          : " + response.message + ", " +str(response.balance));
+        print("-------------------------------------------")
+
+
 def test():
    #  # 测试注册用户
    #  # 创建bank_yl001用户，并存入10000
@@ -186,7 +274,7 @@ def test():
    #                                                          phone="00000000001",
    #                                                          withdrawBankAccount="bank_yl001",
    #                                                          withdrawEthaddress="0xB0B5Cc397ED952587a4B1A17AFDdF01F99DA4531"))
-
+   #
 
     # # 测试注册用户
     # #创建bank_yl002用户，并存入10000
@@ -355,43 +443,43 @@ def test():
         print("-------------------------------------------")
 
 
-    # 测试GUSD兑换USD
-    with grpc.insecure_channel('172.16.1.175:50053') as channel:
-        stub = gemini_pb2_grpc.geminiStub(channel)
-        response = stub.balance(gemini_pb2.balanceRequest(account='genemi_yl001'))
-        print("balanceRequest : account='genemi_yl001'")
-        print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
-        print("-------------------------------------------")
+    # # 测试GUSD兑换USD
+    # with grpc.insecure_channel('172.16.1.175:50053') as channel:
+    #     stub = gemini_pb2_grpc.geminiStub(channel)
+    #     response = stub.balance(gemini_pb2.balanceRequest(account='genemi_yl001'))
+    #     print("balanceRequest : account='genemi_yl001'")
+    #     print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
+    #     print("-------------------------------------------")
+    #
+    #     response = stub.exchangeUSD(gemini_pb2.exchangeUSDRequest(account='genemi_yl001',gusd=100))
+    #     print("exchangeGUSD : account='genemi_yl001' , usd=100")
+    #     print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
+    #     print("-------------------------------------------")
+    #
+    #     response = stub.balance(gemini_pb2.balanceRequest(account='genemi_yl001'))
+    #     print("balanceRequest : account='genemi_yl001'")
+    #     print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
+    #     print("-------------------------------------------")
 
-        response = stub.exchangeUSD(gemini_pb2.exchangeUSDRequest(account='genemi_yl001',gusd=100))
-        print("exchangeGUSD : account='genemi_yl001' , usd=100")
-        print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
-        print("-------------------------------------------")
 
-        response = stub.balance(gemini_pb2.balanceRequest(account='genemi_yl001'))
-        print("balanceRequest : account='genemi_yl001'")
-        print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
-        print("-------------------------------------------")
-
-
-    #测试提现GUSD
-
-    with grpc.insecure_channel('172.16.1.175:50053') as channel:
-        stub = gemini_pb2_grpc.geminiStub(channel)
-        response = stub.balance(gemini_pb2.balanceRequest(account='genemi_yl001'))
-        print("balanceRequest : account='genemi_yl001'")
-        print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
-        print("-------------------------------------------")
-
-        response = stub.withdrawalGUSD(gemini_pb2.withdrawalGUSDRequest(account='genemi_yl001',withdrawEthaddress='0xB0B5Cc397ED952587a4B1A17AFDdF01F99DA4531',gusd=100))
-        print("exchangeGUSD : account='genemi_yl001' , usd=100")
-        print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
-        print("-------------------------------------------")
-
-        response = stub.balance(gemini_pb2.balanceRequest(account='genemi_yl001'))
-        print("balanceRequest : account='genemi_yl001'")
-        print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
-        print("-------------------------------------------")
+    # #测试提现GUSD
+    #
+    # with grpc.insecure_channel('172.16.1.175:50053') as channel:
+    #     stub = gemini_pb2_grpc.geminiStub(channel)
+    #     response = stub.balance(gemini_pb2.balanceRequest(account='genemi_yl001'))
+    #     print("balanceRequest : account='genemi_yl001'")
+    #     print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
+    #     print("-------------------------------------------")
+    #
+    #     response = stub.withdrawalGUSD(gemini_pb2.withdrawalGUSDRequest(account='genemi_yl001',withdrawEthaddress='0xB0B5Cc397ED952587a4B1A17AFDdF01F99DA4531',gusd=100))
+    #     print("withdrawalGUSD : account='genemi_yl001' , usd=100")
+    #     print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
+    #     print("-------------------------------------------")
+    #
+    #     response = stub.balance(gemini_pb2.balanceRequest(account='genemi_yl001'))
+    #     print("balanceRequest : account='genemi_yl001'")
+    #     print("received          : "+response.message + ", USD:"+str(response.usd) +", GUSD:"+str(response.gusd));
+    #     print("-------------------------------------------")
 
 
 

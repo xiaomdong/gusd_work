@@ -58,16 +58,28 @@ g_web3 = None
 
 eventFilterDic = {'PrintingLocked': None}
 
-burnGUSDRecordfun=None
-printGUSDRecordfun=None
-depositUSD2RegulatoryRecordfun=None
-withdrawalUSD2CollectionRecordfun=None
+burnGUSDRecordFun=None
+printGUSDRecordFun=None
+depositUSD2RegulatoryRecordFun=None
+withdrawalUSD2CollectionRecordFun=None
+depositGUSDRecordFun=None
 
-def setEventRecordFun(burnGUSDRecordfun_,printGUSDRecordfun_,depositUSD2RegulatoryRecordfun_,withdrawalUSD2CollectionRecordfun_):
-    burnGUSDRecordfun=burnGUSDRecordfun_
-    printGUSDRecordfun=printGUSDRecordfun_
-    depositUSD2RegulatoryRecordfun=depositUSD2RegulatoryRecordfun_
-    withdrawalUSD2CollectionRecordfun=withdrawalUSD2CollectionRecordfun_
+def setEventRecordFun(burnGUSDRecordFun_,
+                      printGUSDRecordFun_,
+                      depositUSD2RegulatoryRecordFun_,
+                      withdrawalUSD2CollectionRecordFun_,
+                      depositGUSDRecordFun_):
+    global burnGUSDRecordFun
+    global printGUSDRecordFun
+    global depositUSD2RegulatoryRecordFun
+    global withdrawalUSD2CollectionRecordFun
+    global depositGUSDRecordFun
+
+    burnGUSDRecordFun=burnGUSDRecordFun_
+    printGUSDRecordFun=printGUSDRecordFun_
+    depositUSD2RegulatoryRecordFun=depositUSD2RegulatoryRecordFun_
+    withdrawalUSD2CollectionRecordFun=withdrawalUSD2CollectionRecordFun_
+    depositGUSDRecordFun = depositGUSDRecordFun_
 
 #初始化函数，设置GUSD的合约对象
 def gusd_init():
@@ -156,7 +168,7 @@ def sweeperTransfer(addr,value):
         txhash =ERC20ProxyContract.functions.transfer(addr,value).transact({'from': SWEEPER_ETH_ACCOUNT})
         web3.eth.waitForTransactionReceipt(txhash)
         g_log.info("sweeper send " + str(value) + " GUSD to " + addr)
-        return txhash
+        return web3.toHex(txhash)
     except Exception as e:
         g_log.info("sweeper send " + str(value) + " GUSD to " + addr)
         g_log.error("something err:%s" % (e))
@@ -170,7 +182,7 @@ def transferToSweeper(addr,value):
         txhash =ERC20ProxyContract.functions.transfer(SWEEPER_ETH_ACCOUNT,value).transact({'from': addr})
         web3.eth.waitForTransactionReceipt(txhash)
         g_log.info(addr + " send " + str(value) + " GUSD to sweeper")
-        return txhash
+        return web3.toHex(txhash)
     except Exception as e:
         g_log.info(addr + " send " + str(value) + " GUSD to sweeper")
         g_log.error("something err:%s" % (e))
@@ -184,7 +196,7 @@ def transfer(fromaddr,toaddr,value):
         txhash =ERC20ProxyContract.functions.transfer(toaddr,value).transact({'from': fromaddr})
         web3.eth.waitForTransactionReceipt(txhash)
         g_log.info(fromaddr + " send " + str(value) + " GUSD to " + toaddr)
-        return txhash
+        return web3.toHex(txhash)
     except Exception as e:
         g_log.info(fromaddr + " send " + str(value) + " GUSD to " + toaddr)
         g_log.error("something err:%s" % (e))
@@ -266,6 +278,7 @@ def bankTransfer(fromAccount_,toAccount_,value_):
 #         web3.eth.waitForTransactionReceipt(txhash)
 
 def gusd_print(money):
+    global depositUSD2RegulatoryRecordFun
     web3 = g_web3
 
     balance=bankBlance(COLLECTIVE_BANK_ACCOUNT)
@@ -280,14 +293,14 @@ def gusd_print(money):
     if(result ==None):
         return None
 
-    if(depositUSD2RegulatoryRecordfun!=None):
-        depositUSD2RegulatoryRecordfun(money, result.recordIndex)
+    if(depositUSD2RegulatoryRecordFun!=None):
+        depositUSD2RegulatoryRecordFun(money, result.recordIndex)
     try:
         web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
         txhash=PrintLimiterContract.functions.limitedPrint(SWEEPER_ETH_ACCOUNT, money).transact({'from': SWEEPER_ETH_ACCOUNT})
         web3.eth.waitForTransactionReceipt(txhash)
         g_log.info("print " + str(money) +" GUSD")
-        return txhash
+        return web3.toHex(txhash)
     except Exception as e:
         #这里出现错误要尝试操作，如果尝试不成功，需要回退，待添加
         g_log.error("something err:%s" % (e))
@@ -333,6 +346,7 @@ def get_gusd_print():
 #         web3.eth.waitForTransactionReceipt(txhash)
 
 def gusd_burn(money):
+    global withdrawalUSD2CollectionRecordFun
     web3 = g_web3
 
     balance = bankBlance(REGULATORY_BANK_ACCOUNT)
@@ -347,8 +361,8 @@ def gusd_burn(money):
     if(result == None):
         return None
 
-    if(withdrawalUSD2CollectionRecordfun != None):
-        withdrawalUSD2CollectionRecordfun(money, result.recordIndex)
+    if(withdrawalUSD2CollectionRecordFun != None):
+        withdrawalUSD2CollectionRecordFun(money, result.recordIndex)
     try:
         web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
         txhash = ERC20ImplContract.functions.burn(money).transact({'from': SWEEPER_ETH_ACCOUNT})
@@ -523,6 +537,12 @@ def request_loop(web3):
 #event处理函数
 def handle_event(event):
     web3 = g_web3
+    global burnGUSDRecordFun
+    global printGUSDRecordFun
+    global depositGUSDRecordFun
+    # print(burnGUSDRecordFun)
+    # print(printGUSDRecordFun)
+    # print(depositGUSDRecordFun)
 
     if (event['event'] == "PrintingLocked"):
         print(
@@ -536,19 +556,27 @@ def handle_event(event):
     if (event['event'] == "Transfer"):
         # print(web3.toHex(event['transactionHash']))
         # print(type(web3.toHex(event['transactionHash'])))
-        print(event['event'] + ":" + event['args']['_from'] + "," + event['args']['_to'] + "," + str(
+        g_log.info(event['event'] + ":" + event['args']['_from'] + "," + event['args']['_to'] + "," + str(
             event['args']['_value']))
 
         if (event['args']['_to'] == '0x0000000000000000000000000000000000000000'):
             print("burn operation")
-            if(burnGUSDRecordfun!=None):
-                burnGUSDRecordfun(event['args']['_value'],web3.toHex(event['transactionHash']))
+            if(burnGUSDRecordFun!=None):
+                burnGUSDRecordFun(event['args']['_value'],web3.toHex(event['transactionHash']))
 
         if (event['args']['_from'] == '0x0000000000000000000000000000000000000000'):
             print("print operation")
-            if(printGUSDRecordfun!=None):
-                printGUSDRecordfun(event['args']['_value'],web3.toHex(event['transactionHash']))
-        print("-----------------------------")
+            if(printGUSDRecordFun!=None):
+                printGUSDRecordFun(event['args']['_value'],web3.toHex(event['transactionHash']))
+        # print("-----------------------------")
+
+        if (event['args']['_from']!='0x0000000000000000000000000000000000000000'):
+            to=event['args']['_to']
+            if (depositGUSDRecordFun != None):
+                result=depositGUSDRecordFun(event['args']['_to'],event['args']['_from'],event['args']['_value'],web3.toHex(event['transactionHash']))
+                # print(result)
+
+
 
 #event 循环接收
 def event_loop(eventFilterDic, poll_interval):
