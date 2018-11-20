@@ -250,6 +250,37 @@ def testDepositUSD():
         print("-------------------------------------------")
 
 
+#测试初始balance
+def testBalance():
+    with grpc.insecure_channel('172.16.1.176:50052') as channel:
+        stub = bank_pb2_grpc.bankStub(channel)
+
+        # #查询归集帐号blance
+        # response = stub.balance(bank_pb2.balanceRequest(account=control.COLLECTIVE_BANK_ACCOUNT))
+        # print("balanceRequest    : account=COLLECTIVE_BANK_ACCOUNT")
+        # print("received          : " + response.message + ", " +str(response.balance));
+        #
+        # # 查询监管帐号blance
+        # response = stub.balance(bank_pb2.balanceRequest(account=control.REGULATORY_BANK_ACCOUNT))
+        # print("balanceRequest    : account=REGULATORY_BANK_ACCOUNT")
+        # print("received          : " + response.message + ", " +str(response.balance));
+
+        control.gusd_init()
+
+        balance=control.bankBlance(control.COLLECTIVE_BANK_ACCOUNT)
+        # if(balance!=None):
+        #     print("COLLECTIVE_BANK_ACCOUNT balance:%d"%(balance))
+
+        balance=control.bankBlance(control.REGULATORY_BANK_ACCOUNT)
+        # if (balance != None):
+        #     print("REGULATORY_BANK_ACCOUNT balance:%d" % (balance))
+
+        gusdBalance=control.getGUSDBalance(control.SWEEPER_ETH_ACCOUNT)
+
+        # totalSupply=control.getTotalSupply()
+
+        totalSupply =control.get_gusd_print()
+
 def test():
    #  # 测试注册用户
    #  # 创建bank_yl001用户，并存入10000
@@ -485,8 +516,9 @@ def test():
 
 if __name__ == '__main__':
     # control.gusd_init()
-    test()
+    # test()
 
+    testBalance()
 
     # run()
 

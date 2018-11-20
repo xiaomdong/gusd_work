@@ -31,12 +31,53 @@ SWEEPER_ETH_ACCOUNT = '0xa8512Eab06Ed25F8452Bf7A99E5C65135f822bF3'  # sweeper账
 SWEEPER_ETH_PASSWORD='123456'
 ACCOUNT_ETH_PASSWORD='123456'
 
-Custodian1Contract_address = '0x1087aB99F519798A2c7F2CEF6a42f9274F64D641'
-Custodian2Contract_address = '0xe0526B779D6F326a28156809e24c894AE455CbBD'
-ERC20ImplContract_address = '0x5Fd0B7Ab187773cCbAe3FA87a14B13745A602165'
-ERC20StoreContract_address = '0x4c8538fAB25417B225e03441b52736Ff9Ed65295'
-ERC20ProxyContract_address = '0x12E8F1F738E5E6124A2883A0f55d48bA6A355e82'
-PrintLimiterContract_address = '0x4f4399DDe7687794B141254A34Dd862891ACa1B6'
+# # Custodian1   : 0x1087aB99F519798A2c7F2CEF6a42f9274F64D641
+# # Custodian2   : 0xe0526B779D6F326a28156809e24c894AE455CbBD
+# # deployContract:0x16D1F0F617ec517f223476c813dE567A015857EC
+# # ERC20Store   : 0x4c8538fAB25417B225e03441b52736Ff9Ed65295
+# # ERC20Proxy   : 0x12E8F1F738E5E6124A2883A0f55d48bA6A355e82
+# # ERC20Impl    : 0x5Fd0B7Ab187773cCbAe3FA87a14B13745A602165
+# # PrintLimiter : 0x4f4399DDe7687794B141254A34Dd862891ACa1B6
+
+# Custodian1Contract_address = '0x1087aB99F519798A2c7F2CEF6a42f9274F64D641'
+# Custodian2Contract_address = '0xe0526B779D6F326a28156809e24c894AE455CbBD'
+# ERC20StoreContract_address = '0x4c8538fAB25417B225e03441b52736Ff9Ed65295'
+# ERC20ProxyContract_address = '0x12E8F1F738E5E6124A2883A0f55d48bA6A355e82'
+# ERC20ImplContract_address = '0x5Fd0B7Ab187773cCbAe3FA87a14B13745A602165'
+# PrintLimiterContract_address = '0x4f4399DDe7687794B141254A34Dd862891ACa1B6'
+
+
+# Custodian1   : 0x2e16e22A41A1Bc9F49e1b2CBdDfC4b27c9aBff1E
+# Custodian2   : 0xf22F8a667a7Ef5f2601BBa6136726c16B4B0A648
+# deployContract:0x363115222B582de015a359dA0a4BFF906b36B0E3
+# ERC20Store   : 0x03517C16930830f3d1D107467245816089bCEA47
+# ERC20Proxy   : 0xF10e0E47BA23875E0052934983Ab5DB1AA1d749f
+# ERC20Impl    : 0x20276e2cc9Ca9a8257A4C01487d32dAfaCE2a449
+# PrintLimiter : 0xcA24B57392133B16E571c6c15CFc76cd37525842
+
+
+# Custodian1Contract_address = '0x2e16e22A41A1Bc9F49e1b2CBdDfC4b27c9aBff1E'
+# Custodian2Contract_address = '0xf22F8a667a7Ef5f2601BBa6136726c16B4B0A648'
+# ERC20StoreContract_address = '0x03517C16930830f3d1D107467245816089bCEA47'
+# ERC20ProxyContract_address = '0xF10e0E47BA23875E0052934983Ab5DB1AA1d749f'
+# ERC20ImplContract_address = '0x20276e2cc9Ca9a8257A4C01487d32dAfaCE2a449'
+# PrintLimiterContract_address = '0xcA24B57392133B16E571c6c15CFc76cd37525842'
+
+# Custodian1: 0xd2f4adf199E415aCb756fb17e8C09759D88Cd446
+# Custodian2: 0x2e193eF6F82015a0C2450557d91C33558697669E
+# deployContract: 0x028aec1E218B8ed77eB108b2C6a3e55F9bEe1d0a
+# ERC20Store: 0x156eF276069F574C90Fd54aE6BBdC46b418ff714
+# ERC20Proxy: 0x4D93De969652C3de005A08D96Dd914fEA4bf4C4A
+# ERC20Impl: 0x1C0cecb567fA9FfB83870af2F87a907C657E670D
+# PrintLimiter: 0x215e35eD102dE652B66923b2165E4029C6FfD168
+
+Custodian1Contract_address = '0xd2f4adf199E415aCb756fb17e8C09759D88Cd446'
+Custodian2Contract_address = '0x2e193eF6F82015a0C2450557d91C33558697669E'
+ERC20StoreContract_address = '0x156eF276069F574C90Fd54aE6BBdC46b418ff714'
+ERC20ProxyContract_address = '0x4D93De969652C3de005A08D96Dd914fEA4bf4C4A'
+ERC20ImplContract_address = '0x1C0cecb567fA9FfB83870af2F87a907C657E670D'
+PrintLimiterContract_address = '0x215e35eD102dE652B66923b2165E4029C6FfD168'
+
 
 Custodian1Contract = None
 Custodian2Contract = None
@@ -159,6 +200,16 @@ def getGUSDBalance(addr):
         g_log.error("something err:%s" % (e))
         return None
 
+def getTotalSupply():
+    web3 = g_web3
+    try:
+        print=ERC20ProxyContract.functions.totalSupply().call()
+        g_log.info(" GUSD total supply:" + str(print))
+        return print
+    except Exception as e:
+        g_log.error("something err:%s" % (e))
+        return None
+
 # sweeper地址向其他地址转账
 def sweeperTransfer(addr,value):
 
@@ -202,6 +253,7 @@ def transfer(fromaddr,toaddr,value):
         g_log.error("something err:%s" % (e))
         return None
 
+
 # # 测试接口，转账gusd
 # def transfer(fromaddr,password, toaddr,value):
 #     web3 = g_web3
@@ -240,7 +292,7 @@ def bankTransfer(fromAccount_,toAccount_,value_):
             stub = bank_pb2_grpc.bankStub(channel)
 
             response = stub.transfer(
-                bank_pb2.transferRequest(fromAccount=fromAccount_,toAccount=toAccount_,value=value_))
+                bank_pb2.transferRequest(fromAccount=fromAccount_, toAccount=toAccount_, value=value_))
             # print("received          : " + response.message + ", " + str(response.balance));
             g_log.info(fromAccount_ + " send " + str(value_) +" usd to "+ toAccount_)
 
@@ -294,7 +346,7 @@ def gusd_print(money):
         return None
 
     if(depositUSD2RegulatoryRecordFun!=None):
-        depositUSD2RegulatoryRecordFun(money, result.recordIndex)
+        depositUSD2RegulatoryRecordFun(money, str(result.recordIndex))
     try:
         web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
         txhash=PrintLimiterContract.functions.limitedPrint(SWEEPER_ETH_ACCOUNT, money).transact({'from': SWEEPER_ETH_ACCOUNT})
@@ -362,7 +414,7 @@ def gusd_burn(money):
         return None
 
     if(withdrawalUSD2CollectionRecordFun != None):
-        withdrawalUSD2CollectionRecordFun(money, result.recordIndex)
+        withdrawalUSD2CollectionRecordFun(money, str(result.recordIndex))
     try:
         web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
         txhash = ERC20ImplContract.functions.burn(money).transact({'from': SWEEPER_ETH_ACCOUNT})
@@ -378,6 +430,7 @@ def gusd_burn(money):
 #向归集账户转入初始发行的USD
 #从归集账户想监管账户转账初始发行的USD
 #发行GUSD
+#初始发行10000GUSD
 def gusd_init_print(money):
     web3 = g_web3
     with grpc.insecure_channel(BANK_SERVER) as channel:
@@ -388,10 +441,10 @@ def gusd_init_print(money):
         response = stub.deposit(bank_pb2.depositRequest(account=REGULATORY_BANK_ACCOUNT, value=0))
         print("REGULATORY_BANK_ACCOUNT          deposit: " + response.message + ", " + str(response.balance));
 
-        response = stub.deposit(
+        response = stub.transfer(
             bank_pb2.transferRequest(fromAccount=COLLECTIVE_BANK_ACCOUNT, toAccount=REGULATORY_BANK_ACCOUNT,
                                      value=money))
-        print("COLLECTIVE_BANK_ACCOUNT transfer REGULATORY_BANK_ACCOUNT: " + response.message + ", " + str(response.balance));
+        print("COLLECTIVE_BANK_ACCOUNT transfer REGULATORY_BANK_ACCOUNT " +str(money)+": "+ response.message + ", " + str(response.balance));
 
 
         web3.personal.unlockAccount(SWEEPER_ETH_ACCOUNT, SWEEPER_ETH_PASSWORD)
@@ -599,7 +652,9 @@ if __name__ == '__main__':
 
     gusd_init()
 
-    create_eth_addr()
+    # gusd_init_print(10000) #只调用一次，不再调用
+
+    # create_eth_addr()
 
     # gusd_init_print(100000)
     # bankBlance(REGULATORY_BANK_ACCOUNT)

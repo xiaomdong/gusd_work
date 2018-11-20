@@ -63,7 +63,7 @@ class bank_server(bank_pb2_grpc.bankServicer):
         return bank_pb2.balanceReply(message='OK',balance=result)
 
     def transfer(self, request, context):
-        g_log.info("transfer:" + request.fromAccount + " to " + request.toAccount + str(request.value))
+        g_log.info("transfer:" + request.fromAccount + " to " + request.toAccount + " " + str(request.value))
         self.threadLock.acquire()
         result = self.bankSql.transfer(request.fromAccount,request.toAccount,request.value)
         if(result ==None):

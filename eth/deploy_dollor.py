@@ -42,7 +42,7 @@ def get_gusd_contract(web3,path,constractName,address_,*args):
     # print(compiled_sol.keys())
     contract_interface=compiled_sol[path+":"+constractName]
     # address_ = deploy_contract_with_args(web3, contract_interface,*args)
-
+    # print(contract_interface['abi'])
     contract = web3.eth.contract(
         address=address_,
         abi=contract_interface['abi'],
@@ -54,15 +54,15 @@ def get_gusd_contract(web3,path,constractName,address_,*args):
 
 if __name__ == '__main__':
 
-    # for Ganache
-    # web3=connectCanacheHTTPWeb3("http://127.0.0.1:7545")
-    # print(web3.eth.accounts)
+    # # for Ganache
+    # # web3=connectCanacheHTTPWeb3("http://127.0.0.1:7545")
+    # # print(web3.eth.accounts)
+    # #
+    # # _sweeper = '0x06f81141909619a79D0F7F46e5d9F35419eaacF1'
+    # #
+    # # signer1 = '0xb0B0536F6FE2e6D0c611a16F7F5e6717B9bb6C12'  #私钥是ccb2a9f96a56c21c7eb73467876b141aaa9ccb857abf422f0aba203f858954cc
+    # # signer2 = '0x335de6AFAdD5d5adF4EE97787B48470A8cED4912'  #私钥是193b422de71590277ef2b2035045cfb7d9eb9743d004ab8c15c5e9f0d1bc9d4a
     #
-    # _sweeper = '0x06f81141909619a79D0F7F46e5d9F35419eaacF1'
-    #
-    # signer1 = '0xb0B0536F6FE2e6D0c611a16F7F5e6717B9bb6C12'  #私钥是ccb2a9f96a56c21c7eb73467876b141aaa9ccb857abf422f0aba203f858954cc
-    # signer2 = '0x335de6AFAdD5d5adF4EE97787B48470A8cED4912'  #私钥是193b422de71590277ef2b2035045cfb7d9eb9743d004ab8c15c5e9f0d1bc9d4a
-
 
     # #for true eth private net
     # web3=connectCanacheHTTPWeb3("http://127.0.0.1:8545")
@@ -114,36 +114,61 @@ if __name__ == '__main__':
     # print("PrintLimiter : " + PrintLimiter.address)
 
 
-
-    #第八步，通过未据名合约实例 1
-    #修改 ERC20Impl 合约上的 custodian
-    #修改 ERC20Impl 合约上的 custodian
-    #修改 ERC20Proxy 合约上的 custodian
-    #修改 ERC20Store 合约上的 custodian
-    #修改 ERC20Proxy 合约上的 erc20Impl
-    #修改 ERC20Store 合约上的 erc20Impl
-    # deployContract.functions.initialize(ERC20Store.address, ERC20Proxy.address, ERC20Impl.address, Custodian2.address, PrintLimiter.address).transact()
-
     #
-    # Custodian1   : 0x1087aB99F519798A2c7F2CEF6a42f9274F64D641
-    # Custodian2   : 0xe0526B779D6F326a28156809e24c894AE455CbBD
-    # deployContract:0x16D1F0F617ec517f223476c813dE567A015857EC
-    # ERC20Store   : 0x4c8538fAB25417B225e03441b52736Ff9Ed65295
-    # ERC20Proxy   : 0x12E8F1F738E5E6124A2883A0f55d48bA6A355e82
-    # ERC20Impl    : 0x5Fd0B7Ab187773cCbAe3FA87a14B13745A602165
-    # PrintLimiter : 0x4f4399DDe7687794B141254A34Dd862891ACa1B6
+    # #第八步，通过未据名合约实例 1
+    # #修改 ERC20Impl 合约上的 custodian
+    # #修改 ERC20Impl 合约上的 custodian
+    # #修改 ERC20Proxy 合约上的 custodian
+    # #修改 ERC20Store 合约上的 custodian
+    # #修改 ERC20Proxy 合约上的 erc20Impl
+    # #修改 ERC20Store 合约上的 erc20Impl
+    # # deployContract.functions.initialize(ERC20Store.address, ERC20Proxy.address, ERC20Impl.address, Custodian2.address, PrintLimiter.address).transact()
+    #
+    # #
+    # # Custodian1   : 0x1087aB99F519798A2c7F2CEF6a42f9274F64D641
+    # # Custodian2   : 0xe0526B779D6F326a28156809e24c894AE455CbBD
+    # # deployContract:0x16D1F0F617ec517f223476c813dE567A015857EC
+    # # ERC20Store   : 0x4c8538fAB25417B225e03441b52736Ff9Ed65295
+    # # ERC20Proxy   : 0x12E8F1F738E5E6124A2883A0f55d48bA6A355e82
+    # # ERC20Impl    : 0x5Fd0B7Ab187773cCbAe3FA87a14B13745A602165
+    # # PrintLimiter : 0x4f4399DDe7687794B141254A34Dd862891ACa1B6
+    #
+    #
+    # web3=connectCanacheHTTPWeb3("http://127.0.0.1:8545")
+    # print(web3.eth.accounts)
+    # web3.middleware_stack.inject(geth_poa_middleware, layer=0)
+    # deployContract = get_gusd_contract(web3, DEPLOY_FILE_PATH,'deploy','0x16D1F0F617ec517f223476c813dE567A015857EC')
+    # # deployContract.functions.initialize(ERC20Store.address, ERC20Proxy.address, ERC20Impl.address, Custodian2.address,
+    # #                                     PrintLimiter.address).transact()
+    # deployContract.functions.initialize('0x4c8538fAB25417B225e03441b52736Ff9Ed65295',
+    #                                     '0x12E8F1F738E5E6124A2883A0f55d48bA6A355e82',
+    #                                     '0x5Fd0B7Ab187773cCbAe3FA87a14B13745A602165',
+    #                                     '0xe0526B779D6F326a28156809e24c894AE455CbBD',
+    #                                     '0x4f4399DDe7687794B141254A34Dd862891ACa1B6').transact()
+
+    # Custodian1: 0xd2f4adf199E415aCb756fb17e8C09759D88Cd446
+    # Custodian2: 0x2e193eF6F82015a0C2450557d91C33558697669E
+    # deployContract: 0x028aec1E218B8ed77eB108b2C6a3e55F9bEe1d0a
+    # ERC20Store: 0x156eF276069F574C90Fd54aE6BBdC46b418ff714
+    # ERC20Proxy: 0x4D93De969652C3de005A08D96Dd914fEA4bf4C4A
+    # ERC20Impl: 0x1C0cecb567fA9FfB83870af2F87a907C657E670D
+    # PrintLimiter: 0x215e35eD102dE652B66923b2165E4029C6FfD168
 
 
     web3=connectCanacheHTTPWeb3("http://127.0.0.1:8545")
-    print(web3.eth.accounts)
+    # print(web3.eth.accounts)
     web3.middleware_stack.inject(geth_poa_middleware, layer=0)
-    deployContract = get_gusd_contract(web3, DEPLOY_FILE_PATH,'deploy','0x16D1F0F617ec517f223476c813dE567A015857EC')
+    deployContract = get_gusd_contract(web3, DEPLOY_FILE_PATH,'deploy','0x028aec1E218B8ed77eB108b2C6a3e55F9bEe1d0a')
     # deployContract.functions.initialize(ERC20Store.address, ERC20Proxy.address, ERC20Impl.address, Custodian2.address,
     #                                     PrintLimiter.address).transact()
-    deployContract.functions.initialize('0x4c8538fAB25417B225e03441b52736Ff9Ed65295',
-                                        '0x12E8F1F738E5E6124A2883A0f55d48bA6A355e82',
-                                        '0x5Fd0B7Ab187773cCbAe3FA87a14B13745A602165',
-                                        '0xe0526B779D6F326a28156809e24c894AE455CbBD',
-                                        '0x4f4399DDe7687794B141254A34Dd862891ACa1B6').transact()
+    web3.eth.defaultAccount = w3.eth.accounts[0]
 
+    web3.personal.unlockAccount(w3.eth.accounts[0], "123456")
+    print(web3.eth.defaultAccount)
 
+    txhash=deployContract.functions.initialize('0x156eF276069F574C90Fd54aE6BBdC46b418ff714',
+                                        '0x4D93De969652C3de005A08D96Dd914fEA4bf4C4A',
+                                        '0x1C0cecb567fA9FfB83870af2F87a907C657E670D',
+                                        '0x2e193eF6F82015a0C2450557d91C33558697669E',
+                                        '0x215e35eD102dE652B66923b2165E4029C6FfD168').transact()
+    web3.eth.waitForTransactionReceipt(txhash)

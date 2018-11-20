@@ -364,24 +364,24 @@ class gemini():
             # 没有查询到用户的记录
             return None
         else:
-            if (result[0][0] >= value): #[0][0]是USD [0][1]是GUSD
-                _value = result[0][0] + value
-                if(self.sql.updateUSDWithoutCommit(account, _value) == None):
-                    # sql 操作失败，这里暂时都不处理
-                    return None
-                operation = EXCHANGE_USD_OPERATION
-                otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS #银行归集账户
-                recordIndex = self.sql.getRecordIndex() + 1
-                if (recordIndex == None):
-                    return None
-                if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
-                    # sql 操作失败，这里暂时都不处理
-                    return None
-
-                g_log.info(account + ", "+str(operation) + ", " + otherAccount + ", " + str(value) + ", " + addedinfo + ", " + str(recordIndex))
-                return [(_value,value)] #返回兑换后的USD余额，和兑换的数目
-            else:
+            # if (result[0][1] >= value): #[0][0]是USD [0][1]是GUSD ,由于GUSD不记录在表中，所以这个判断去掉
+            _value = result[0][0] + value
+            if(self.sql.updateUSDWithoutCommit(account, _value) == None):
+                # sql 操作失败，这里暂时都不处理
                 return None
+            operation = EXCHANGE_USD_OPERATION
+            otherAccount = COMPANY_SERVER_SWEEPER_ADDRESS #银行归集账户
+            recordIndex = self.sql.getRecordIndex() + 1
+            if (recordIndex == None):
+                return None
+            if(self.sql.insertRecord(account, time, operation, otherAccount, value, recordIndex, addedinfo) == None):
+                # sql 操作失败，这里暂时都不处理
+                return None
+
+            g_log.info(account + ", "+str(operation) + ", " + otherAccount + ", " + str(value) + ", " + addedinfo + ", " + str(recordIndex))
+            return [(_value,value)] #返回兑换后的USD余额，和兑换的数目
+            # else:
+            #     return None
 
     # 存款GUSD，由客户触发，web3模块收到转账event后调用此函数
     # addedinfo记录客户的DepositEthaddress接收到GUSD的交易哈希
